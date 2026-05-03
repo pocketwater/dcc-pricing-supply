@@ -1,0 +1,373 @@
+registry_version: 0.1
+last_registry_update: 2026-05-02
+
+skills:
+  - skill_id: Orders.auditDay
+    domain: Orders
+    status: active
+    trigger_phrases:
+      - "{count} dispatches on {date} seems high"
+      - "No blockers on {date}?"
+      - "Did we already import {date}?"
+      - "Why does coverage look weird for {date}?"
+      - "Did we miss importing dispatches on {date}?"
+      - "Give me a day-level completeness check for {date}"
+    non_triggers:
+      - "Julie says these ARNs are not in PDI, go find them"
+      - "Find these dispatches in PDI Orders"
+      - "Check whether these reference numbers exist in PDI"
+      - "Reconcile this list to PDI and show found vs not found"
+      - "Trace this dispatch through ingest"
+      - "Show me the blockers"
+      - "Resolve blockers"
+    intent: >
+      Evaluate operational health and completeness for a specific day by
+      reconciling day-level counts and statuses across coverage, validation,
+      blocker, and imported/PDI proof surfaces.
+      This skill is date-scoped and aggregate-oriented, not identifier-list
+      reconciliation.
+    inputs_required:
+      - operational_date
+      - optional_business_unit_scope
+      - optional_terminal_or_destination_scope
+      - completeness_basis
+    output_contract:
+      type: audit_day_result
+      deterministic: true
+      artifacts:
+        - day_status_summary
+        - day_count_waterfall
+        - blocker_presence_summary
+        - day_completeness_gap_summary
+        - recommended_next_action
+      deterministic_rules:
+        - "All counts must be reported with declared completeness_basis."
+        - "Identifier-level found/not-found lists are out of scope; route to Orders.reconcileToPDI when requested."
+        - "Blocker detail table retrieval is out of scope; route to Orders.blockerWorklist mode=show for exact table output."
+    proof_required:
+      - "Count math check: expected_day_volume = completed_or_imported + blocked + pending_or_failed + unresolved"
+      - "Each component count must map to a declared proof surface"
+      - "If blocker_count = 0, include explicit zero-blocker proof"
+      - "If day_completeness_gap_count > 0, include category-level gap reasons"
+    overlaps_with:
+      - skill: Orders.findMissingFromPDI
+        relationship: merged
+        rationale: "Day-level completeness meaning merged into Orders.auditDay; identifier-list reconciliation redirects to Orders.reconcileToPDI; Orders.findMissingFromPDI must not execute as a standalone skill."
+      - skill: Orders.reconcileToPDI
+        relationship: non_overlapping
+        rationale: "reconcileToPDI owns identifier-list reconciliation and found/not-found outputs."
+      - skill: Orders.blockerWorklist
+        relationship: non_overlapping
+        rationale: "blockerWorklist owns exact blocker table retrieval and blocker resolution mode."
+    execution_surface:
+      harness: citysv-gravitate-pdi-ode
+      mode: read_only
+      intent_note: >
+        Describes the real-world systems this skill would interrogate
+        if executed. This does not imply execution exists yet.
+      likely_objects:
+        - coverage views
+        - blocker LU
+        - PDI order proof queries
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "36 dispatches on a day we already imported seems very high. No blockers on 4/30?"
+    reuse_count: 1
+    notes: >
+      Hardened candidate with explicit day-level completeness boundary.
+      Do not absorb identifier-list reconciliation; route that work to
+      Orders.reconcileToPDI.
+    last_seen: 2026-05-02
+  - skill_id: Orders.blockerWorklist
+    domain: Orders
+    status: active
+    # -------------------------------------------------------------------
+    # MODE SUPPORT
+    # mode: show   — read-only blocker table retrieval (default)
+    # mode: resolve — human-actionable triage + recommendation
+    # Default: show unless user clearly asks for resolution/action
+    # -------------------------------------------------------------------
+    mode_routing:
+      default_mode: show
+      mode_show:
+        triggers:
+          - "show blockers"
+          - "give me the blocker table"
+          - "what blockers do we have"
+          - "show me the blockers"
+          - "what are the blockers for {date}"
+          - "show blockers for {date}"
+      mode_resolve:
+        triggers:
+          - "resolve blockers"
+          - "let's resolve the blockers"
+          - "work the blockers"
+          - "work the blocker list"
+          - "fix the human-actionable blockers"
+          - "what are the human next actions for blockers"
+    trigger_phrases:
+      - "Show me the blockers"
+      - "Give me the blocker table"
+      - "What blockers do we have for {date}?"
+      - "Let's resolve the blockers"
+      - "Work the blockers"
+      - "Resolve blockers"
+    non_triggers:
+      - "Did we already import {date}?"
+      - "Why does coverage look weird for {date}?"
+      - "Run the import"
+      - "Patch the pipeline"
+      - "Deploy the fix"
+      - "Trace this dispatch through ingest"
+      - "Find ARNs in PDI"
+      - "Did we miss imports on {date}?"
+    intent: >
+      Retrieve or triage the blocker worklist for an operational date or range.
+      mode=show returns the exact blocker table with reason breakdown and totals
+      (read-only, no mutation).
+      mode=resolve separates human-actionable blockers from hard blockers,
+      produces recommended resolution steps, and defaults to recommendation-only
+      until Jason explicitly approves any mutation.
+    inputs_required:
+      - operational_date_or_range
+      - mode                        # show | resolve  (default: show)
+      - optional_scope_subset       # optional: filter by blocker_type, terminal, destination
+    output_contract:
+      deterministic: true
+      mode_show:
+        artifacts:
+          - blocker_table            # exact table rows — no narrative substitute
+          - blocker_reason_summary   # grouped counts by reason code
+          - blocker_totals           # total_blockers, impacted_order_count
+          - zero_blocker_proof       # explicit confirmation if count = 0
+        safety:
+          mutates_data: false
+          prod_safe: true
+          approval_required: false
+      mode_resolve:
+        artifacts:
+          - actionable_blocker_table       # rows a human can act on (DEST_UNRESOLVED, TERMINAL_UNRESOLVED)
+          - non_actionable_blocker_table   # hard blockers outside human reach
+          - recommended_resolution_steps   # recommendation-only by default
+          - remaining_blocker_count        # after proposed actions
+          - post_action_status_proof       # populated only if mutation was approved + executed
+        safety:
+          mutates_data: true              # only if Jason approves a specific mutation step
+          prod_safe: false
+          approval_required: true
+    proof_required:
+      mode_show:
+        - blocker_table row count must match blocker_totals.total_blockers
+        - zero_blocker_proof must be present and explicit when count = 0
+      mode_resolve:
+        - actionable_count + non_actionable_count = total_blockers from show surface
+        - recommended_resolution_steps must cite specific blocker rows by key
+        - no mutation step executes without explicit Jason approval in same session
+    overlaps_with:
+      - skill: Orders.auditDay
+        relationship: non_overlapping
+        rationale: "auditDay includes blocker_count as a single aggregate dimension; blockerWorklist owns dedicated blocker table retrieval and triage across both modes."
+      - skill: Orders.traceMissingIngest
+        relationship: non_overlapping
+        rationale: "traceMissingIngest is source-to-ingest forensics on specific identifiers; blockerWorklist operates on the blocker surface only."
+      - skill: Orders.reconcileToPDI
+        relationship: non_overlapping
+        rationale: "reconcileToPDI is identifier-level found/not-found reconciliation; blockerWorklist is blocker state triage and resolution."
+    merged_from:
+      - Orders.showBlockers    # collapsed — mode=show covers this primitive
+      - Orders.resolveBlockers # collapsed — mode=resolve covers this primitive
+    execution_surface:
+      harness: citysv-gravitate-pdi-ode
+      likely_objects:
+        - blocker LU
+        - validation views
+        - handoff detail views
+        - xref tables
+    evidence_prompts:
+      - "Ok, so you know, when I say \"show me the blockers\" I want to see exactly that table you just shared."
+      - "Ok. Lets resolve the blockers"
+      - "When I say lets \"resolve\" blockers I'm refering to the blockers that a human likely needs to solve"
+    reuse_count: 3
+    notes: >
+      Collapsed from Orders.showBlockers and Orders.resolveBlockers.
+      The distinction is mode, not primitive — a single skill with modal dispatch
+      prevents duplicate trigger ambiguity. Actionable blockers are typically
+      DEST_UNRESOLVED and TERMINAL_UNRESOLVED unless Jason redefines scope.
+    last_seen: 2026-05-02
+  - skill_id: Orders.traceMissingIngest
+    domain: Orders
+    status: active
+    human_phrases:
+      - "Find out why we missed it and how to prevent it in the future"
+      - "Why are we missing orders in ingest?"
+      - "Go to the source SFTP and see if it's there"
+      - "Trace this dispatch through ingest"
+    non_trigger_phrases:
+      - "Refactor ingest into the pipeline"
+      - "Replace Power Automate"
+      - "Deploy the new ingest flow"
+      - "Commit and deploy"
+    intent: >
+      Trace a specific dispatch or ARN from source through ingest surfaces,
+      identify the first point of loss or exclusion, and produce proof of where
+      the record disappeared.
+    inputs:
+      - dispatch_or_arn_list
+      - source_date_or_range
+      - optional_source_location
+    outputs:
+      - source_presence_proof
+      - ingest_stage_presence_by_layer
+      - last_present_stage
+      - first_missing_stage
+      - failure_classification
+      - minimal_prevention_recommendation
+    execution_surface:
+      harness: citysv-gravitate-pdi-ode
+      mode: read_only
+      intent_note: >
+        This is the forensic tracing primitive only. Architecture refactors are
+        adjacent work, not part of the skill contract.
+      likely_objects:
+        - Gravitate SFTP outbound files
+        - raw ingest tables
+        - validation views
+        - handoff detail views
+    duplicate_check:
+      status: distinct
+      compared_against:
+        - Orders.auditDay
+      rationale: >
+        TraceMissingIngest is record-level source-to-ingest forensics, not a
+        date-level operational health read.
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Find out why we missed it and how to prevent it in the future."
+    reuse_count: 1
+    notes: >
+      Promoted to active by explicit Jason approval. Keep the skill scoped to
+      proof of loss and failure classification; do not collapse build/refactor
+      work into the same primitive.
+    last_seen: 2026-05-02
+  - skill_id: Orders.findMissingFromPDI
+    domain: Orders
+    status: deprecated
+    merged_into:
+      day_level_completeness: Orders.auditDay
+      identifier_list_reconciliation: Orders.reconcileToPDI
+    trigger_phrases: []
+    non_triggers:
+      - "Find PASS or READY ARNs not in PDI"
+      - "Show validated orders that may not be in PDI"
+      - "Julie says these aren't in PDI, go find em"
+      - "Find distinct ARNs that pass validation but do not match PDI Orders"
+    intent: >
+      Deprecated merge-routing record only.
+      Day-level completeness interpretation routes to Orders.auditDay.
+      Identifier-list found/not-found interpretation routes to
+      Orders.reconcileToPDI.
+      No third interpretation is allowed.
+    inputs_required:
+      - request_shape
+      - optional_date_scope
+      - optional_identifier_list
+    output_contract:
+      type: deprecated_redirect
+      deterministic: true
+      artifacts:
+        - redirect_target
+        - redirect_reason
+      deterministic_rules:
+        - "If request is aggregate/date-scoped completeness, redirect_target = Orders.auditDay"
+        - "If request is identifier-list found/not-found, redirect_target = Orders.reconcileToPDI"
+        - "Never execute as standalone skill"
+    proof_required:
+      - "Response must explicitly name redirect_target"
+      - "Response must state why request matched day-level vs identifier-list shape"
+    overlaps_with:
+      - skill: Orders.auditDay
+        relationship: merged
+        rationale: "Owns day-level completeness meaning."
+      - skill: Orders.reconcileToPDI
+        relationship: merged
+        rationale: "Owns identifier-list found/not-found reconciliation meaning."
+    execution_surface:
+      harness: citysv-gravitate-pdi-ode
+      mode: redirect_only
+      intent_note: >
+        Deprecated routing record retained for governance traceability.
+      likely_objects:
+        - none
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Lets look for any PASS or READY ARNs that we have for the entire month of April. We're trying to identify ARN's that may not have been entered."
+      - "Julie sent some orders she says aren't in PDI. Here are the ARNs, go find em. 192270 192688."
+    reuse_count: 2
+    notes: >
+      Deprecated per Jason decision. Do not preserve as active/candidate.
+      Keep only as merge-routing trace to Orders.auditDay and
+      Orders.reconcileToPDI.
+    last_seen: 2026-05-02
+  - skill_id: Orders.reconcileToPDI
+    domain: Orders
+    status: active
+    trigger_phrases:
+      - "Julie says these ARNs are not in PDI, go find them"
+      - "Find these dispatches in PDI Orders"
+      - "Check whether these reference numbers exist in PDI"
+      - "Reconcile this list to PDI and show found vs not found"
+    non_triggers:
+      - "Did we miss imports on 5/1?"
+      - "Trace this dispatch from SFTP through ingest"
+      - "Show me the blockers"
+      - "Resolve blockers for this run"
+    inputs_required:
+      - identifier_type
+      - identifiers
+      - optional_date_scope
+      - join_basis
+    output_contract:
+      type: reconcile_to_pdi_result
+      deterministic: true
+      artifacts:
+        - found_not_found_table
+        - count_summary
+        - join_basis_declaration
+      deterministic_rules:
+        - "All reconciliations must use the declared join_basis and normalization_rules."
+        - "Never infer a missing PDI order from absence alone; classify as not_found_in_join_scope unless Orders.traceMissingIngest is invoked."
+    proof_required:
+      - "Count check: distinct_input_count = found_count + not_found_count + ambiguous_match_count"
+      - "Report duplicate_input_count separately; duplicates do not alter distinct_input_count reconciliation math."
+      - "Sample proof rows for found and not_found_in_join_scope groups"
+      - "Explicit statement of join basis and normalization applied"
+      - "If date scope used, report rows excluded by date filter"
+    overlaps_with:
+      - skill: Orders.auditDay
+        relationship: non_overlapping
+        rationale: "auditDay is day-level health/completeness, not identifier-level reconciliation."
+      - skill: Orders.traceMissingIngest
+        relationship: non_overlapping
+        rationale: "traceMissingIngest is lineage/forensics across pipeline stages; reconcileToPDI is join-scope existence validation only."
+      - skill: Orders.blockerWorklist
+        relationship: non_overlapping
+        rationale: "blockerWorklist is blocker triage/resolution planning, not found/not-found reconciliation."
+    evidence_prompts:
+      - "Julie sent some orders she says aren't in PDI. Here are the ARNs, go find em. 192270 192688."
+      - "Ok find 192709, 192564, and 192707,192398"
+      - "We're looking for distinct ARNs that pass validation (including info/warnings) but do not have a matching ARN in PDI Orders."
+    reuse_count: 3
+    notes: >
+      Promoted to active by explicit Jason approval. This skill is strictly
+      reconciliation-only and must not drift into lineage forensics or blocker
+      triage.
+    last_seen: 2026-05-02
