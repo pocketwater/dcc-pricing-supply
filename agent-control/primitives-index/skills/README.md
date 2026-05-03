@@ -92,6 +92,27 @@ Behavior rules:
 
 ---
 
+## Mandatory Routing Rule (Per Prompt)
+
+On every prompt:
+
+- `forge_skills_registry.yaml` must be consulted before any runbook, prompt, or ad-hoc reasoning is used.
+- Silent bypass of the registry is not allowed.
+
+If no skill clearly matches, classify explicitly as one of:
+
+- `NO_MATCH`
+- `PARTIAL_MATCH`
+- `CANDIDATE_PATTERN`
+
+Classification semantics:
+
+- `NO_MATCH` means no active skill applies.
+- `PARTIAL_MATCH` means an active skill may apply, but required inputs or intent boundaries are incomplete.
+- `CANDIDATE_PATTERN` means repeated novel intent may deserve candidate hardening, but no candidate is created until threshold/evidence rules are met.
+
+---
+
 ## Operational Routine: Sync registry
 
 Command phrase: `Sync registry`
@@ -124,6 +145,61 @@ Governance note:
 - Projection is a derived artifact.
 - YAML is the only editable registry.
 - Any drift must be resolved by regenerating projection, never editing projection directly.
+
+---
+
+## Test Protocol: Test routing against transcript
+
+Command phrase: `Test routing against transcript`
+
+Behavior:
+
+1. Read a VS Code exported chat transcript.
+2. Extract Jason prompts only.
+3. For each prompt, classify intent first as one of:
+   - `EXECUTION_INTENT`
+   - `GOVERNANCE_INTENT`
+   - `CONTROL_INTENT`
+   - `OTHER_INTENT`
+4. Apply routing eligibility by intent:
+   - `EXECUTION_INTENT` is eligible for skill routing.
+   - `GOVERNANCE_INTENT` -> always `NO_MATCH`.
+   - `CONTROL_INTENT` -> always `NO_MATCH`.
+   - `OTHER_INTENT` -> `NO_MATCH` unless future domains are explicitly defined.
+5. For `EXECUTION_INTENT` prompts, consult `forge_skills_registry.yaml`.
+6. Classify each prompt as one of:
+   - `skill_invoked: <skill_id>`
+   - `NO_MATCH`
+   - `PARTIAL_MATCH: <skill_id>`
+   - `CANDIDATE_PATTERN`
+7. For each row, include:
+   - prompt number
+   - short prompt
+   - intent class
+   - routing outcome
+   - considered skill
+   - exclusion or selection reason
+8. Summarize:
+   - total prompts
+   - intent-class counts
+   - count by active skill
+   - `NO_MATCH` count
+   - `PARTIAL_MATCH` count
+   - `CANDIDATE_PATTERN` count
+   - candidate clusters, if any
+
+Rules:
+
+- Do not create new skills during the test.
+- Do not promote skills during the test.
+- Do not mutate registry during the test.
+- The test is observability only.
+- Classify the user's actual intent, not trigger phrases embedded in governance/spec text.
+- Do not route from trigger phrases that appear inside quoted text, YAML/spec blocks, governance instructions, examples, or correction instructions about a skill.
+- Control/status phrases (for example: approved, promote to active, execute, do it, proceed, next one) are never `CANDIDATE_PATTERN`.
+- If a prompt is about editing, approving, promoting, reviewing, syncing, or testing the skill registry itself, classify as `NO_MATCH` unless a future `Governance.*` skill is explicitly defined.
+- Critical distinction: a prompt that mentions a skill name but requests editing/approving that skill is `GOVERNANCE_INTENT`; a prompt that requests behavior execution without skill-editing intent is `EXECUTION_INTENT`.
+- If a prompt names a skill and asks to review, edit, harden, promote, fix, route, classify, or update the skill/spec/registry, classify as `GOVERNANCE_INTENT` even if it contains operational words such as audit, blockers, missing, or trace.
 
 ---
 
