@@ -371,3 +371,529 @@ skills:
       reconciliation-only and must not drift into lineage forensics or blocker
       triage.
     last_seen: 2026-05-02
+  - skill_id: Platform.citysvRawCloneBuilder
+    domain: Platform
+    status: candidate
+    trigger_phrases:
+      - "Build a raw clone workflow"
+      - "Generate deterministic table clone artifacts"
+    intent: >
+      Convert raw 1:1 clone runbook work into deterministic clone artifacts
+      with validation and registration outputs.
+    inputs_required:
+      - source_server
+      - source_database
+      - source_schema
+      - source_object
+      - destination_token
+    output_contract:
+      type: clone_build_package
+      deterministic: true
+      artifacts:
+        - clone_ddl
+        - sync_procedure
+        - registration_block
+        - validation_sql
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Convert clone runbook workflow into deterministic execution for raw 1:1 table clones."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical draft. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Ops.stageContractReportGenerator
+    domain: Ops
+    status: candidate
+    trigger_phrases:
+      - "Generate stage contract reports"
+      - "Build plan/design/build/validate report artifacts"
+    intent: >
+      Produce stage-specific contract report artifacts in normalized template
+      format with required ordering and dependency checks.
+    inputs_required:
+      - stage_name
+      - upstream_artifacts
+      - objective
+    output_contract:
+      type: stage_report_bundle
+      deterministic: true
+      artifacts:
+        - plan_report
+        - design_report
+        - build_report
+        - validation_report
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Generate stage-specific report artifacts in required contract templates."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical draft. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Ops.validationEvidencePack
+    domain: Ops
+    status: candidate
+    trigger_phrases:
+      - "Create a validation evidence pack"
+      - "Bundle practical validation checks"
+    intent: >
+      Build focused validation bundles that prove correctness with executable
+      checks and explicit pass or fail evidence.
+    inputs_required:
+      - changed_objects
+      - expected_outcomes
+      - risk_level
+    output_contract:
+      type: validation_evidence_bundle
+      deterministic: true
+      artifacts:
+        - checklist
+        - command_set
+        - pass_fail_summary
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Build one practical validation bundle per change."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical draft. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Ops.mobileDispatchWorkflow
+    domain: Ops
+    status: candidate
+    trigger_phrases:
+      - "Create a shortcut dispatch workflow"
+      - "Standardize iOS-triggered operational actions"
+    intent: >
+      Standardize dispatchable workflows triggered from mobile shortcuts while
+      keeping business logic outside the shortcut layer.
+    inputs_required:
+      - action_name
+      - environment
+      - parameter_schema
+    output_contract:
+      type: mobile_dispatch_package
+      deterministic: true
+      artifacts:
+        - workflow_config
+        - parameter_schema
+        - notification_path
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Standardize converting operational actions into dispatchable workflows callable from iOS shortcuts."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical draft. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Ops.chatHistoryDecisionExtractor
+    domain: Ops
+    status: candidate
+    trigger_phrases:
+      - "Extract decisions from chat history"
+      - "Convert transcript into action records"
+    intent: >
+      Convert long chat transcripts into decision records, unresolved questions,
+      and actionable backlog updates.
+    inputs_required:
+      - source_history_files
+      - extraction_focus
+    output_contract:
+      type: decision_extraction_package
+      deterministic: true
+      artifacts:
+        - decision_ledger_entries
+        - unresolved_questions
+        - action_backlog_updates
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Convert long chat summaries into durable decision records, open questions, and action queues."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical draft. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Ops.sqwibblesIntakeRouter
+    domain: Ops
+    status: candidate
+    trigger_phrases:
+      - "Route sqwibbles entries"
+      - "Atomize notes into next actions"
+    intent: >
+      Parse sqwibbles intake notes and route entries into actionable queues
+      while preserving source traceability.
+    inputs_required:
+      - source_note_file
+      - routing_rules
+    output_contract:
+      type: intake_routing_package
+      deterministic: true
+      artifacts:
+        - normalized_task_entries
+        - scheduling_hints
+        - candidate_pr_stubs
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Parse sqwibbles and route entries into next actions, backlog, or project seeds."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical draft. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Governance.runbookPlaybookDriftCheck
+    domain: Governance
+    status: candidate
+    trigger_phrases:
+      - "Check runbook drift"
+      - "Compare contracts against docs"
+    intent: >
+      Detect drift between canonical contracts, runbooks, and implementation
+      docs and report required fixes.
+    inputs_required:
+      - runbook_directories
+      - contract_references
+    output_contract:
+      type: drift_report
+      deterministic: true
+      artifacts:
+        - drift_report
+        - missing_sections
+        - suggested_patches
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Detect drift between canonical contracts, runbooks, and implementation docs."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical draft. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Governance.crossRepoContextMap
+    domain: Governance
+    status: candidate
+    trigger_phrases:
+      - "Build a cross-repo context map"
+      - "Create a repo pointer index"
+    intent: >
+      Maintain a living cross-repo context map with link-backed claims and
+      freshness checks.
+    inputs_required:
+      - repo_list
+      - topic_anchors
+    output_contract:
+      type: context_map_package
+      deterministic: true
+      artifacts:
+        - context_index_markdown
+        - repo_pointer_map
+        - freshness_status
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Keep a living context map across repos."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical draft. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Security.onePasswordCli
+    domain: Security
+    status: candidate
+    trigger_phrases:
+      - "Use 1Password CLI in automation"
+      - "Resolve op:// secrets at runtime"
+    intent: >
+      Retrieve secrets with 1Password CLI for scripts and jobs without
+      hardcoding credentials.
+    inputs_required:
+      - secret_reference
+      - execution_context
+    output_contract:
+      type: secret_resolution_pattern
+      deterministic: true
+      artifacts:
+        - retrieval_pattern
+        - auth_mode_guidance
+        - failure_mode_table
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Use 1Password CLI for secret retrieval in scripts and SQL Agent jobs."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical draft. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Sql.pdiSql01ServiceAccount
+    domain: Sql
+    status: candidate
+    trigger_phrases:
+      - "Connect to PDI-SQL-01 with service account"
+      - "Diagnose service-account SQL permissions"
+    intent: >
+      Standardize connection, permission checks, and secure auth usage for the
+      PDI SQL service account workflow.
+    inputs_required:
+      - server
+      - database
+      - identity_mode
+    output_contract:
+      type: sql_access_pattern
+      deterministic: true
+      artifacts:
+        - connection_pattern
+        - permission_check_query
+        - blocked_operation_matrix
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Connect to PDI-SQL-01 / PDICompany_2386_01 with svc-fuelpriceauto SQL auth."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical draft. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Sql.linkedServerOps
+    domain: Sql
+    status: candidate
+    trigger_phrases:
+      - "Use linked server PDI-SQL-02 to PDI-SQL-01"
+      - "Tune linked-server read and write patterns"
+    intent: >
+      Guide linked-server usage, query patterns, and diagnostics for PDI-SQL-02
+      to PDI-SQL-01 interactions.
+    inputs_required:
+      - query_goal
+      - scope
+      - performance_constraints
+    output_contract:
+      type: linked_server_guidance
+      deterministic: true
+      artifacts:
+        - query_pattern_choice
+        - diagnostics_checklist
+        - security_context_notes
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Query PDI-SQL-01 from PDI-SQL-02 via SQL linked server."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical draft. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Governance.repoArtifactUpkeep
+    domain: Governance
+    status: candidate
+    trigger_phrases:
+      - "Deprecate or retire repo artifacts"
+      - "Audit SQL object index drift"
+    intent: >
+      Manage lifecycle state for SQL and documentation artifacts, including
+      deprecation, retirement, and drift checks.
+    inputs_required:
+      - artifact_scope
+      - status_change_target
+    output_contract:
+      type: artifact_lifecycle_package
+      deterministic: true
+      artifacts:
+        - status_update_plan
+        - deprecation_notes
+        - retirement_steps
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Deprecate, retire, and clean up repo artifacts."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical draft. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Sql.sqlObjectLifecycle
+    domain: Sql
+    status: candidate
+    trigger_phrases:
+      - "Manage SQL object lifecycle"
+      - "Deploy and validate SQL object changes"
+    intent: >
+      Standardize create/deploy/validate/deprecate lifecycle for SQL objects in
+      PDI_PricingLink.
+    inputs_required:
+      - object_type
+      - object_name
+      - deployment_target
+    output_contract:
+      type: sql_lifecycle_package
+      deterministic: true
+      artifacts:
+        - create_or_alter_script_pattern
+        - deployment_pattern
+        - validation_checklist
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Manage the full lifecycle of SQL objects deployed to PDI-SQL-02."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical draft. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Pipeline.profile69RowMapper
+    domain: Pipeline
+    status: candidate
+    trigger_phrases:
+      - "Map Profile69 error rows to source keys"
+      - "Resolve ODIMP row numbers to identifiers"
+    intent: >
+      Map CSV row-number errors to source keys and produce triage groupings by
+      failure class.
+    inputs_required:
+      - csv_path
+      - error_row_list
+    output_contract:
+      type: row_mapping_report
+      deterministic: true
+      artifacts:
+        - failure_map_table
+        - root_cause_category_by_row
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "ODIMP gives source row numbers but not direct source keys."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical pipeline proposal. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Pipeline.xrefIntegrityAuditor
+    domain: Pipeline
+    status: candidate
+    trigger_phrases:
+      - "Audit xref integrity"
+      - "Find active xref rows with blank mappings"
+    intent: >
+      Detect active xref mapping defects and prioritize them by recent raw
+      volume impact.
+    inputs_required:
+      - date_window
+    output_contract:
+      type: xref_defect_report
+      deterministic: true
+      artifacts:
+        - ranked_defect_list
+        - suggested_fix_statements
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Active xref entries can still contain blank mapped values."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical pipeline proposal. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Pipeline.eligibilityDriftDetector
+    domain: Pipeline
+    status: candidate
+    trigger_phrases:
+      - "Detect eligibility drift"
+      - "Compare blocker population against baseline"
+    intent: >
+      Snapshot and compare eligibility/blocker counts against baselines to
+      detect significant drift.
+    inputs_required:
+      - as_of_date
+      - baseline_period
+    output_contract:
+      type: eligibility_drift_report
+      deterministic: true
+      artifacts:
+        - drift_deltas
+        - probable_causes
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Hidden stage filters and blocker changes alter population unexpectedly."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical pipeline proposal. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Pipeline.renderContractVerifier
+    domain: Pipeline
+    status: candidate
+    trigger_phrases:
+      - "Verify render contract before ODIMP"
+      - "Validate 38-column file structure"
+    intent: >
+      Perform structural pre-flight validation on rendered export files before
+      import attempts.
+    inputs_required:
+      - csv_path
+    output_contract:
+      type: render_contract_report
+      deterministic: true
+      artifacts:
+        - pass_fail_report
+        - offending_rows_and_columns
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Fast structural checks needed before ODIMP attempt."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical pipeline proposal. Candidate only pending hardening.
+    last_seen: 2026-05-02
+  - skill_id: Pipeline.lockSafeExportWriter
+    domain: Pipeline
+    status: candidate
+    trigger_phrases:
+      - "Write lock-safe export file"
+      - "Handle destination lock with versioned sibling"
+    intent: >
+      Write exports safely when destination locks occur and emit deterministic
+      final path telemetry.
+    inputs_required:
+      - target_path
+      - lines
+    output_contract:
+      type: lock_safe_write_report
+      deterministic: true
+      artifacts:
+        - final_written_path
+        - lock_retry_telemetry
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Destination file locks block overwrite."
+    reuse_count: 0
+    notes: >
+      Imported from non-canonical pipeline proposal. Candidate only pending hardening.
+    last_seen: 2026-05-02
