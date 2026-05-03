@@ -66,6 +66,67 @@ A skill stays `candidate` until it has multiple real evidence prompts or Jason e
 
 ---
 
+## Precedence And Control Plane Governance
+
+The DCC agent-control repository is the **primary control plane** for agent behavior, routing, skill lifecycle, and governance.
+
+Effective precedence model:
+
+1. Platform/system constraints
+2. Session developer instructions
+3. DCC (`dcc-pricing-supply/agent-control`)
+4. Forge skill registry (consultation mandatory before any routing decision)
+5. Explicitly invoked runbooks/prompts only
+6. Personal repo (`pers-ops-jvassar`) advisory only, never first-read for routing/governance
+7. Memory layers
+8. Runtime context
+9. User prompt (intent layer)
+
+Behavior rules:
+
+- Always consult `forge_skills_registry.yaml` before using any repo-level runbook or prompt.
+- YAML registry is the source of truth; the CSL Markdown registry is projection only.
+- If YAML and projection differ, Pete must update the projection from YAML, never the reverse.
+- Explicit exception for personal-workflow tasks: when the user prompt is explicitly about Jason personal workflows, productivity system, preferences, SOCKS, planning routines, or personal operating repo content, `pers-ops-jvassar` may be consulted early as the primary content source.
+- The personal-workflow exception does not override DCC governance. DCC still controls behavior, routing, skill lifecycle, and governance.
+
+---
+
+## Operational Routine: Sync registry
+
+Command phrase: `Sync registry`
+
+Manual invocation only. Do not run automatically on every YAML edit.
+
+Execution contract:
+
+1. Read YAML source of truth:
+   - `dcc-pricing-supply/agent-control/primitives-index/skills/forge_skills_registry.yaml`
+2. Generate Markdown projection:
+   - `csl-pricing-supply/semantic-index/AI-primitives-registry/forge_skills_registry.md`
+3. Projection rules:
+   - Markdown is a pure projection of YAML (no projection-only logic).
+   - No manual edits are allowed in the projection file.
+   - Projection must summarize, at minimum, for every skill:
+     - `skill_id`
+     - `status`
+     - trigger phrases (summary form)
+     - overlap relationships (summary form)
+4. Overwrite projection:
+   - Replace the entire Markdown file with regenerated content.
+5. Return sync output summary:
+   - skills added/removed
+   - status changes
+   - structural differences in projection format/content shape
+
+Governance note:
+
+- Projection is a derived artifact.
+- YAML is the only editable registry.
+- Any drift must be resolved by regenerating projection, never editing projection directly.
+
+---
+
 ## Working Instructions (Agents)
 
 After every non-trivial Jason prompt:
