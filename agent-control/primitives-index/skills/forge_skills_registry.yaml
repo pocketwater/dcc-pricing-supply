@@ -5,85 +5,179 @@ skills:
   - skill_id: Orders.auditDay
     domain: Orders
     status: active
+
     trigger_phrases:
-      - "{count} dispatches on {date} seems high"
-      - "No blockers on {date}?"
-      - "Did we already import {date}?"
-      - "Why does coverage look weird for {date}?"
-      - "Did we miss importing dispatches on {date}?"
-      - "Give me a day-level completeness check for {date}"
+     - "{count} dispatches on {date} seems high"
+     - "No blockers on {date}?"
+     - "Did we already import {date}?"
+     - "Why does coverage look weird for {date}?"
+     - "Did we miss importing dispatches on {date}?"
+     - "Give me a day-level completeness check for {date}"
+     - "Audit {date}"
+     - "Sanity check {date}"
+
     non_triggers:
-      - "Julie says these ARNs are not in PDI, go find them"
-      - "Find these dispatches in PDI Orders"
-      - "Check whether these reference numbers exist in PDI"
-      - "Reconcile this list to PDI and show found vs not found"
-      - "Trace this dispatch through ingest"
-      - "Show me the blockers"
-      - "Resolve blockers"
+     - "Julie says these ARNs are not in PDI, go find them"
+     - "Find these dispatches in PDI Orders"
+     - "Check whether these reference numbers exist in PDI"
+     - "Reconcile this list to PDI and show found vs not found"
+     - "Trace this dispatch through ingest"
+     - "Show me the blockers"
+     - "Resolve blockers"
+
     intent: >
-      Evaluate operational health and completeness for a specific day by
-      reconciling day-level counts and statuses across coverage, validation,
-      blocker, and imported/PDI proof surfaces.
-      This skill is date-scoped and aggregate-oriented, not identifier-list
-      reconciliation.
+     Give an operator-facing day-level sanity check first.
+     Evaluate operational health and completeness for a specific day by
+     reconciling aggregate day-level counts and statuses across coverage,
+     validation, blocker, ready/export, and imported/PDI proof surfaces.
+     The default response must answer whether the day is complete, weird,
+     blocked, failed, pending, or already imported. Detailed proof exists,
+     but stays collapsed unless explicitly requested.
+
     inputs_required:
-      - operational_date
-      - optional_business_unit_scope
-      - optional_terminal_or_destination_scope
-      - completeness_basis
-    output_contract:
-      type: audit_day_result
-      deterministic: true
-      artifacts:
-        - day_status_summary
-        - day_count_waterfall
-        - blocker_presence_summary
-        - day_completeness_gap_summary
+     - operational_date
+     - optional_business_unit_scope
+     - optional_terminal_or_destination_scope
+     - completeness_basis
+
+    response_profile:
+     default_mode: operator_brief
+     max_default_length: 12_lines
+     no_terminal_transcript: true
+     no_sql_dump: true
+     no_schema_discovery_transcript: true
+     proof_collapsed_by_default: true
+
+    output_order:
+      - verdict
+      - key_counts
+      - why_it_looks_weird
+      - recommended_next_action
+      - proof_available_note
+
+    operator_brief_contract:
+      verdict_required: true
+      include_only:
+        - day_status
+        - expected_count
+        - imported_or_closed_count
+        - blocked_count
+        - pending_or_failed_count
+        - unresolved_count
+        - top_gap_reason
         - recommended_next_action
-      deterministic_rules:
-        - "All counts must be reported with declared completeness_basis."
-        - "Identifier-level found/not-found lists are out of scope; route to Orders.reconcileToPDI when requested."
-        - "Blocker detail table retrieval is out of scope; route to Orders.blockerWorklist mode=show for exact table output."
+      exclude_by_default:
+        - raw SQL
+        - terminal commands
+        - terminal output
+        - schema discovery steps
+        - full blocker tables
+        - full audit tables
+        - batch GUIDs unless rerun is the recommended action
+        - confidence scores
+        - empathy scores
+        - long footers
+
+    expansion_commands:
+      - "show proof"
+      - "show blocker breakdown"
+      - "show batch IDs"
+      - "show SQL"
+      - "full audit report"
+
+    output_contract:
+     type: audit_day_result
+     deterministic: true
+     default_artifacts:
+      - operator_verdict
+      - key_count_summary
+      - top_gap_reason
+      - recommended_next_action
+     expanded_artifacts:
+      - day_status_summary
+      - day_count_waterfall
+      - blocker_presence_summary
+      - day_completeness_gap_summary
+      - proof_surface_summary
+      - recommended_next_action
+     deterministic_rules:
+      - "Default output must be an operator brief, not a forensic report."
+      - "All counts must be reported with declared completeness_basis."
+      - "Count math must be checked internally before answering."
+      - "Raw SQL, terminal output, and schema discovery steps must not be shown unless explicitly requested."
+      - "Identifier-level found/not-found lists are out of scope; route to Orders.reconcileToPDI when requested."
+      - "Blocker detail table retrieval is out of scope; route to Orders.blockerWorklist mode=show for exact table output."
+      - "If blocker_count = 0, include explicit zero-blocker proof in the expanded proof only."
+      - "If day_completeness_gap_count > 0, include category-level gap reasons, not identifier-level rows."
+
     proof_required:
       - "Count math check: expected_day_volume = completed_or_imported + blocked + pending_or_failed + unresolved"
       - "Each component count must map to a declared proof surface"
-      - "If blocker_count = 0, include explicit zero-blocker proof"
-      - "If day_completeness_gap_count > 0, include category-level gap reasons"
+      - "If blocker_count = 0, maintain explicit zero-blocker proof internally"
+      - "If day_completeness_gap_count > 0, maintain category-level gap reasons internally"
+
     overlaps_with:
-      - skill: Orders.findMissingFromPDI
-        relationship: merged
-        rationale: "Day-level completeness meaning merged into Orders.auditDay; identifier-list reconciliation redirects to Orders.reconcileToPDI; Orders.findMissingFromPDI must not execute as a standalone skill."
-      - skill: Orders.reconcileToPDI
-        relationship: non_overlapping
-        rationale: "reconcileToPDI owns identifier-list reconciliation and found/not-found outputs."
-      - skill: Orders.blockerWorklist
-        relationship: non_overlapping
-        rationale: "blockerWorklist owns exact blocker table retrieval and blocker resolution mode."
+     - skill: Orders.findMissingFromPDI
+       relationship: merged
+       rationale: >
+         Day-level completeness meaning merged into Orders.auditDay;
+         identifier-list reconciliation redirects to Orders.reconcileToPDI;
+         Orders.findMissingFromPDI must not execute as a standalone skill.
+     - skill: Orders.reconcileToPDI
+       relationship: non_overlapping
+       rationale: >
+        reconcileToPDI owns identifier-list reconciliation and found/not-found outputs.
+     - skill: Orders.blockerWorklist
+       relationship: non_overlapping
+       rationale: >
+        blockerWorklist owns exact blocker table retrieval and blocker resolution mode.
+
     execution_surface:
-      harness: citysv-gravitate-pdi-ode
-      mode: read_only
-      intent_note: >
-        Describes the real-world systems this skill would interrogate
-        if executed. This does not imply execution exists yet.
-      likely_objects:
-        - coverage views
-        - blocker LU
-        - PDI order proof queries
+     harness: citysv-gravitate-pdi-ode
+     mode: read_only
+     intent_note: >
+       Describes the real-world systems this skill interrogates when executed.
+       Execution must remain read-only and operator-brief-first.
+     likely_objects:
+       - coverage views
+       - validation views
+       - ready/export views
+       - blocker LU
+       - daily driver run log
+       - post-import closeout audit
+       - PDI order proof queries
+
     safety:
-      mutates_data: false
-      prod_safe: true
-      approval_required: false
+     mutates_data: false
+     prod_safe: true
+     approval_required: false
+
     evidence_prompts:
-      - "36 dispatches on a day we already imported seems very high. No blockers on 4/30?"
-    reuse_count: 1
-    notes: >
-      Hardened candidate with explicit day-level completeness boundary.
-      Do not absorb identifier-list reconciliation; route that work to
-      Orders.reconcileToPDI.
-    last_seen: 2026-05-02
-  - skill_id: Orders.blockerWorklist
-    domain: Orders
-    status: active
+     - "36 dispatches on a day we already imported seems very high. No blockers on 4/30?"
+
+    example_default_output: |
+     5/2 is not clean.
+
+     Expected dispatches: 105
+     Imported/closed out: 0
+     Blocked: 49
+     Eligible but not imported: 56
+
+     Main issue: both 5/2 run attempts failed before export/import because the precheck references a missing eligible object.
+
+     Next action: fix the stale object reference, rerun the 5/2 batches, then rerun auditDay.
+
+     Proof is available if you want the full audit.
+
+    reuse_count: 2
+     notes: >
+     Hardened with operator-brief-first response profile after first real test returned
+     useful proof but too much terminal/query/report noise. Default grain is sanity
+     check; expanded proof is opt-in.
+    last_seen: 2026-05-04
+     - skill_id: Orders.blockerWorklist
+       domain: Orders
+       status: active
     # -------------------------------------------------------------------
     # MODE SUPPORT
     # mode: show   — read-only blocker table retrieval (default)
