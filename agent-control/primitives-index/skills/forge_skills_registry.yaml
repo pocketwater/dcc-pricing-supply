@@ -993,7 +993,7 @@ skills:
     last_seen: 2026-05-02
   - skill_id: Orders.runOrders
     domain: Orders
-    status: candidate
+    status: active
     trigger_phrases:
       - "Run orders for {date}"
       - "Run {date} orders"
@@ -1052,6 +1052,7 @@ skills:
         - "If post-import gate is FAIL, report clearly with batch ID and unmatched count; do not re-run automatically."
         - "Report archive filename explicitly so operator has the proof reference."
         - "All stage runtimes must be reported."
+        - "Stage 1 must always execute the export script fresh. Never replay or report output from a prior run. The archive timestamp in the output is the proof of execution."
     proof_required:
       - "Export: ROWS, H, F, DISPATCHES counts + archive filename"
       - "Post-import: gate result + matched/unmatched counts + batch ID"
@@ -1097,10 +1098,12 @@ skills:
       - "Run 5/3 orders"
       - "Let's do 5/1"
       - "Ok, run orders for 5/3. I'm going to suggest that you also take advantage of this opportunity and submit a skill candidate for orders.runorders"
-    reuse_count: 1
+      - "Good, update skill and activate it"
+    reuse_count: 2
     notes: >
-      Candidate submitted 2026-05-04 based on repeated run-orders pattern across
-      5/1, 5/2, 5/3 sessions. Three-stage sequence (export → operator upload →
-      post-import) is well-proven. Needs hardening pass to formalize skip-flag
-      handling and partial-match operator override prompts.
+      Promoted to active 2026-05-04 after stress test. Stress test caught one
+      defect: skill initially replayed prior run output instead of executing
+      fresh. Fixed by adding explicit no_cache deterministic rule — archive
+      timestamp is the proof of execution. Pattern observed 3+ times across
+      5/1, 5/2, 5/3 runs. Three-stage sequence is proven and stable.
     last_seen: 2026-05-04
