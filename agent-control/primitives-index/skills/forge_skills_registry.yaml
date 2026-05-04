@@ -1,5 +1,5 @@
 registry_version: 0.1
-last_registry_update: 2026-05-02
+last_registry_update: 2026-05-04
 
 skills:
   - skill_id: Orders.auditDay
@@ -991,3 +991,116 @@ skills:
     notes: >
       Imported from non-canonical pipeline proposal. Candidate only pending hardening.
     last_seen: 2026-05-02
+  - skill_id: Orders.runOrders
+    domain: Orders
+    status: candidate
+    trigger_phrases:
+      - "Run orders for {date}"
+      - "Run {date} orders"
+      - "Generate the {date} upload file"
+      - "Let's do {date}"
+      - "Export and upload {date}"
+      - "Run the pipeline for {date}"
+    non_triggers:
+      - "Audit {date}"
+      - "Did we already import {date}?"
+      - "Show blockers for {date}"
+      - "Resolve blockers"
+      - "Trace this dispatch through ingest"
+      - "Find ARNs in PDI"
+    intent: >
+      Orchestrate the full end-to-end CitySV Gravitate order pipeline run for
+      a specific gate day: export generation, operator handoff for file upload,
+      and post-import pipeline execution. Each stage gate must pass before the
+      next stage is initiated. The skill owns sequencing and operator handoff
+      prompts; it does not own triage, blocker resolution, or audit.
+    inputs_required:
+      - gate_day               # ISO date string e.g. 2026-05-03
+      - optional_skip_flags    # e.g. -SkipCoverageSnap, -AllowPartialMatch
+    stage_sequence:
+      - stage: 1_export
+        action: >
+          Run Invoke-PDI_ODE_Gravitate_Export.ps1 -GateDay {gate_day}.
+          Report ROWS, H, F, DISPATCHES, runtime. Stop if export fails or ROWS=0.
+        gate: ROWS > 0 and no fatal error
+        operator_handoff: false
+      - stage: 2_upload
+        action: >
+          Prompt operator to upload the generated canonical file to PDI ODIMP.
+          Report archive filename and canonical path.
+          Wait for operator confirmation of upload attempt and result.
+        gate: operator confirms upload attempted
+        operator_handoff: true
+      - stage: 3_post_import
+        action: >
+          Run Invoke-PDI_ODE_Gravitate_PostImport_FromFile.ps1 with the archive
+          file path from stage 1. Report gate result, batch ID, matched count,
+          unmatched count. Stage 7b warning budget result. Stage 8 snap result.
+        gate: GATE PASS and 0 UNMATCHED
+        operator_handoff: false
+    output_contract:
+      type: run_orders_result
+      deterministic: true
+      artifacts:
+        - export_summary          # ROWS, H, F, DISPATCHES, runtime, archive path
+        - upload_handoff_prompt   # canonical path + archive filename for operator
+        - post_import_summary     # gate result, batch ID, matched/unmatched, warning budget, snap status
+      deterministic_rules:
+        - "Export must complete before upload handoff is issued."
+        - "Post-import must not run until operator confirms upload was attempted."
+        - "If export ROWS=0 or export fails fatally, stop and report; do not proceed to upload."
+        - "If post-import gate is FAIL, report clearly with batch ID and unmatched count; do not re-run automatically."
+        - "Report archive filename explicitly so operator has the proof reference."
+        - "All stage runtimes must be reported."
+    proof_required:
+      - "Export: ROWS, H, F, DISPATCHES counts + archive filename"
+      - "Post-import: gate result + matched/unmatched counts + batch ID"
+      - "Stage 7b result must be reported (OK, insufficient history, or error)"
+      - "Stage 8 result must be reported (complete or non-fatal error)"
+    overlaps_with:
+      - skill: Orders.auditDay
+        relationship: non_overlapping
+        rationale: >
+          auditDay is a read-only day-level health check. runOrders is the
+          mutating execution path. They may be used in sequence (run then audit)
+          but are not interchangeable.
+      - skill: Orders.blockerWorklist
+        relationship: non_overlapping
+        rationale: >
+          blockerWorklist handles triage of the blocked population. runOrders
+          runs against the PASS/eligible population only; blockers surface in
+          export counts and are reported, not resolved, by this skill.
+    execution_surface:
+      harness: citysv-gravitate-pdi-ode
+      mode: read_write
+      intent_note: >
+        Stage 1 and Stage 3 execute pipeline scripts that write files and
+        mutate PDI_PricingLink staging tables. Stage 2 requires operator
+        interaction with PDI ODIMP. This skill is not prod-safe without
+        operator confirmation at the upload gate.
+      likely_objects:
+        - Invoke-PDI_ODE_Gravitate_Export.ps1
+        - Invoke-PDI_ODE_Gravitate_PostImport_FromFile.ps1
+        - CitySV_OrdersUpload.csv (canonical destination)
+        - CitySV_OrdersUpload_{date}_{ts}.csv (archive)
+        - CitySV_OrdersUpload_Handoff_Ledger
+        - CitySV_OrdersUpload_Handoff_Detail
+    safety:
+      mutates_data: true
+      prod_safe: false
+      approval_required: true
+      approval_note: >
+        Export write and post-import finalization both mutate production state.
+        Operator must confirm upload before post-import executes.
+    evidence_prompts:
+      - "Run orders for 5/3"
+      - "Run 5/3 orders"
+      - "Let's do 5/1"
+      - "Ok, run orders for 5/3. I'm going to suggest that you also take advantage of this opportunity and submit a skill candidate for orders.runorders"
+    reuse_count: 1
+    notes: >
+      Candidate submitted 2026-05-04 based on repeated run-orders pattern across
+      5/1, 5/2, 5/3 sessions. Three-stage sequence (export → operator upload →
+      post-import) is well-proven. Needs hardening pass to formalize skip-flag
+      handling and partial-match operator override prompts.
+    last_seen: 2026-05-04
