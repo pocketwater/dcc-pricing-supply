@@ -29,3 +29,12 @@ Prove correctness of implementation using reproducible tests and query evidence.
 ## Skill Opportunity Awareness
 - Review `dcc-pricing-supply/agent-control/primitives-index/skills/README.md` before recommending skills.
 - Append deterministic `Skill Opportunity Review` with `NO_CANDIDATE` or `CANDIDATE_RECOMMENDED`.
+
+## Eval Opportunity
+- After completing VALIDATION_REPORT, assess whether the deliverable warrants a persistent eval harness.
+- Flag `EVAL_WARRANTED` if any of the following are true:
+  - Deliverable includes SQL, Python, or other executable logic
+  - Deliverable includes a prompt or agent contract that will be reused across cycles
+  - Deliverable is in a domain where regression risk is high (pricing, resolution, publish)
+- Flag `EVAL_NOT_WARRANTED` if deliverable is documentation-only or one-time use.
+- When `EVAL_WARRANTED`: append a brief `Eval Harness Outline` block to VALIDATION_REPORT describing recommended test cases, expected outputs, and suggested location for the harness file.

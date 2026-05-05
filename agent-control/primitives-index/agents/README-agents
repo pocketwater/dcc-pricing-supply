@@ -1,1 +1,56 @@
-# Readme for agents folder in dcc-pricing-supply
+# Agents — Dev Team
+
+This folder contains the canonical agent contracts for the **Operational Intelligence Dev Team**.
+
+## What This Is
+
+A stage-gated, contract-driven delivery pipeline. Eight agents own the full cycle from planning through release. Each agent has a defined mission, authority boundary, output contract, and handoff target. No stage skipping. No self-approval.
+
+## Invocation
+
+Say **`Use the dev team.`** in any chat session. Supply task, stage, and prior approved artifact.
+Full usage guide: `prompts/dev_team_usage.md`
+Controller prompt: `prompts/use_dev_team.prompt.md`
+
+## Pipeline Order
+
+| # | Stage | Agent | Output |
+|---|-------|-------|--------|
+| 1 | Plan | `planner` | `PLAN_REPORT` |
+| 2 | Design | `architect` | `DESIGN_REPORT` |
+| 3 | Build | `builder` | `BUILD_REPORT` |
+| 4 | Validate | `validator` | `VALIDATION_REPORT` |
+| 5 | UX | `end_user` | `UX_REPORT` |
+| 6 | Review | `reviewer` | Risk assessment summary |
+| 7 | Release | `ops` | `RELEASE_REPORT` |
+
+Gate approvals are agent-executed (not human-dependent) unless an explicit escalation state is triggered.
+
+## Agents In This Folder
+
+| File | Role |
+|------|------|
+| `planner.agent.md` | Owns scope, plan, and stage routing |
+| `architect.agent.md` | Owns design and technical approach |
+| `builder.agent.md` | Owns implementation |
+| `validator.agent.md` | Proves correctness; flags eval opportunities |
+| `end_user.agent.md` | Represents operational usability |
+| `reviewer.agent.md` | Risk gatekeeper before release |
+| `business_manager.agent.md` | Final GO/NO-GO authority |
+| `ops.agent.md` | Owns release packaging and deployment |
+
+## Workspace Coverage
+
+All repos in this multi-root workspace:
+`dcc-pricing-supply` · `csl-pricing-supply` · `pdi-clone-core` · `citysv-prices` · `citysv-costs` · `gravitate-orders` · `pers-ops-jvassar`
+
+## Related Primitives
+
+| Resource | Path |
+|----------|------|
+| Runbook | `runbooks/dev_cycle.md` |
+| Validation checklist | `runbooks/validation_checklist.md` |
+| Report templates | `reports/` |
+| Stage prompts | `prompts/` |
+| Training example | `examples/rerunnable_training_project.md` |
+| Human-facing registry | `csl-pricing-supply/semantic-index/AI-primitives-registry/agent_registry.md` |
