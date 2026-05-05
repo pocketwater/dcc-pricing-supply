@@ -1114,3 +1114,64 @@ skills:
       2026-05-04 for 2026-05-05 go-live: morning requests now run prior day
       plus current day to close post-second-SFTP delivery lag.
     last_seen: 2026-05-04
+  - skill_id: Ops.humanSpellCheck
+    domain: Ops
+    status: candidate
+    trigger_phrases:
+      - "Spell check my note"
+      - "Check spelling in this entry"
+      - "Review this for typos"
+      - "Proofread this"
+    non_triggers:
+      - "Fix this code"
+      - "Review this SQL"
+      - "Check this script"
+      - "Edit this document"
+    scope:
+      applies_to: human_authored_only
+      excludes:
+        - agent_generated_responses
+        - agent_registry_entries
+        - agent_code_or_sql_output
+        - system_instructions
+      scope_note: >
+        This skill checks spelling only in human-authored input text -- prompt
+        notes, inbox entries, planning documents, and freeform operator text.
+        Agent-generated content is explicitly out of scope and must never be
+        spell-checked or corrected by this skill.
+    intent: >
+      Identify and correct misspellings in human-authored text without
+      altering meaning, tone, structure, or content beyond the targeted
+      spelling fix.
+    inputs_required:
+      - source_text
+      - optional_custom_word_list
+    output_contract:
+      type: spell_check_result
+      deterministic: true
+      artifacts:
+        - flagged_words_list
+        - suggested_corrections
+        - corrected_text_diff
+      deterministic_rules:
+        - "Report flagged words with line or position reference."
+        - "Suggest one correction per flag; note alternatives if ambiguous."
+        - "Never alter agent-generated text."
+        - "Never alter code, SQL, file paths, or identifiers inside human text."
+        - "Preserve original formatting and structure."
+    proof_required:
+      - "Every flagged word maps to a suggested correction or explicit no-change decision."
+      - "Corrected diff must show only spelling changes -- no structural edits."
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "I want you to design a spell check skill candidate and add it to the registries. It does not need to check agent edits and entries, only humans entries."
+    reuse_count: 0
+    notes: >
+      Candidate only. Scope boundary is the critical constraint: human-authored
+      text only. Agent responses, registry entries, code, SQL, and identifiers
+      are all out of scope. Trigger only on explicit spell-check requests --
+      do not invoke speculatively on every human message.
+    last_seen: 2026-05-04
