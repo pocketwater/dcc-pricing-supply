@@ -22,7 +22,7 @@ Controller prompt: `prompts/use_dev_team.prompt.md`
 | 4 | Validate | `validator` | `VALIDATION_REPORT` |
 | 5 | UX | `end_user` | `UX_REPORT` |
 | 6 | Review | `reviewer` | Risk assessment summary |
-| 7 | Release | `ops` | `RELEASE_REPORT` |
+| 7 | Release | `ops` | `RELEASE_REPORT` + `VERSION_RELEASE_SCHEDULE_REPORT` |
 
 Gate approvals are agent-executed (not human-dependent) unless an explicit escalation state is triggered.
 

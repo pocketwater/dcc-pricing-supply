@@ -21,6 +21,7 @@ This runbook governs contract-driven delivery across this workspace:
 - No stage execution without required approval state from previous gate.
 - For project-planning engagements, a `PROJECT_PLANNING_MANIFEST` artifact is required as the final consolidated planning document.
 - Operator must provide `TRAINING_OUTPUT_ROOT` when running a training/simulation cycle. If missing, controller asks once, then proceeds.
+- For pipelines where PDI is an endpoint, pre-release validation must include SQL-01 sandbox company evidence.
 
 ## Skill Awareness And Candidate Loop
 
@@ -37,6 +38,16 @@ This runbook governs contract-driven delivery across this workspace:
 - For `PLANNING_SAFE` work, Planner-stage execution proceeds automatically through agent-owned planning gates.
 - `PLANNING_SAFE` does not authorize design, build, validation, UX, review, release, code changes, SQL changes, script changes, job changes, or runtime behavior changes.
 
+## Bootstrap-First Planning Policy
+- All `PLAN_REPORT` outputs must begin with a bootstrap approach that targets the lowest-cost valid output.
+- Bootstrap approach must define entry criteria, minimum success condition, and explicit criteria for expanding beyond bootstrap.
+
+## Grain, Translation, And Ontology Requirements
+- Every stage artifact must include `Grain In` and `Grain Out` declarations.
+- Every stage artifact must include translation requirements or an explicit `NO_TRANSLATION_REQUIRED` declaration.
+- Every stage artifact must include an ontological assumptions block and confidence note.
+- Reviewer must classify ontology/deontology failures as `NONE`, `MINOR`, or `BLOCKING`.
+
 ## Execution Order
 1. Planner -> `PLAN_REPORT` -> Business Manager approval.
 2. Architect -> `DESIGN_REPORT` -> Planner + Business Manager approval.
@@ -44,7 +55,7 @@ This runbook governs contract-driven delivery across this workspace:
 4. Validator -> `VALIDATION_REPORT`.
 5. End User -> `UX_REPORT`.
 6. Reviewer -> structured risk assessment summary.
-7. Ops -> `RELEASE_REPORT` -> Business Manager final GO/NO-GO.
+7. Ops -> `RELEASE_REPORT` + `VERSION_RELEASE_SCHEDULE_REPORT` -> Business Manager final GO/NO-GO.
 
 ## Gate Ownership Model
 
@@ -108,6 +119,7 @@ Use `examples/rerunnable_training_project.md` as the canonical micro-project for
 - No self-approval.
 - No undefined artifacts.
 - Each stage output must match its template contract.
+- Each stage output must include grain, translation, and ontology declarations.
 - Business Manager and End User have enforceable veto points.
 - Approval gates are executed by agents; human involvement only on explicit escalation.
 - Project plans must include `PROJECT_PLANNING_MANIFEST` and keep it aligned to the latest approved stage artifacts.
@@ -122,5 +134,7 @@ Use `examples/rerunnable_training_project.md` as the canonical micro-project for
 - All required artifacts are present and approved where required.
 - For project-planning work, `PROJECT_PLANNING_MANIFEST` is present and references the active planning artifact set.
 - Final manager decision is GO.
+- `VERSION_RELEASE_SCHEDULE_REPORT` is present and aligned with the release verdict.
+- For PDI endpoint pipelines, SQL-01 sandbox company validation evidence is present.
 - Deployment, rollback, monitoring, and ownership are explicit in RELEASE_REPORT.
 - Final project package is surfaced for one human operator approval.

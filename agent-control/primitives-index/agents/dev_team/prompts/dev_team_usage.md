@@ -16,6 +16,7 @@ Then declare:
 4. whether the request is `PLANNING_SAFE`
 5. whether the routine stops after that artifact or auto-continues through agent-owned planning gates
 6. `TRAINING_OUTPUT_ROOT` when running a training/simulation routine
+7. whether PDI is an endpoint (requires SQL-01 sandbox evidence before release)
 
 ## Planner Example
 
@@ -29,6 +30,8 @@ TRAINING_OUTPUT_ROOT: <operator supplied path>
 
 Produce a PLAN_REPORT for _Orders_Upload Phase 1 (S1-S5 spine + visibility).
 Use the PLAN_REPORT template exactly.
+Start with bootstrap approach for the lowest-cost valid output.
+Include Grain In/Out, translation requirements, and ontological assumptions.
 Do not produce SQL, build packets, design details, or downstream-stage content.
 Route the completed PLAN_REPORT to Business Manager automatically.
 If APPROVED, align and emit the PROJECT_PLANNING_MANIFEST.
@@ -46,6 +49,7 @@ Prior approved artifact: PLAN_REPORT approved by Business Manager on 2026-04-13.
 Allowed artifact: DESIGN_REPORT only.
 
 Produce the DESIGN_REPORT within approved PLAN_REPORT scope only.
+Include Grain In/Out, translation requirements, and ontological assumptions.
 Do not change scope.
 Do not produce BUILD_REPORT content.
 Stop after the DESIGN_REPORT and wait for Planner + Business Manager approval.
@@ -62,6 +66,7 @@ Allowed artifact: BUILD_REPORT only.
 
 Produce the BUILD_REPORT only.
 Implement exactly what the approved DESIGN_REPORT authorizes.
+Include Grain In/Out, translation implementation notes, and ontological assumptions.
 State whether validation queries are included.
 Stop after the BUILD_REPORT and wait for Validator stage.
 ```
@@ -77,6 +82,8 @@ Allowed artifact: VALIDATION_REPORT only.
 
 Produce the VALIDATION_REPORT only.
 Include reproducible evidence, pass/fail summary, and blocking issues.
+Include Grain In/Out, translation validation, ontological assumptions check, and deontological failure check.
+If PDI is an endpoint, include SQL-01 sandbox validation evidence.
 Do not rewrite implementation.
 Stop after the VALIDATION_REPORT and wait for End User review.
 ```
@@ -92,6 +99,7 @@ Allowed artifact: UX_REPORT only.
 
 Produce the UX_REPORT only.
 Evaluate click path, friction, failure clarity, and training burden.
+Include Grain In/Out, translation impacts, and user-facing ontological assumptions.
 Stop after the UX_REPORT and wait for Reviewer stage.
 ```
 
@@ -118,11 +126,11 @@ Use the dev team.
 
 Current stage: Ops.
 Prior approved artifact: review summary completed.
-Allowed artifact: RELEASE_REPORT only.
+Allowed artifact: RELEASE_REPORT + VERSION_RELEASE_SCHEDULE_REPORT only.
 
-Produce the RELEASE_REPORT only.
-Include deployment, rollback, monitoring, ownership, and release verdict.
-Stop after the RELEASE_REPORT and wait for final Business Manager GO/NO-GO.
+Produce RELEASE_REPORT and VERSION_RELEASE_SCHEDULE_REPORT.
+Include deployment, rollback, monitoring, ownership, release verdict, versioning strategy, and release calendar.
+Stop after both artifacts and wait for final Business Manager GO/NO-GO.
 ```
 
 ## Recovery Prompt
@@ -151,3 +159,4 @@ Then state the required prior artifact and approval.
 5. For `PLANNING_SAFE` routines, planner and business_manager gates run automatically without human approval prompts.
 6. For autonomous full-cycle routines, stage gates remain agent-owned and only the final package is surfaced for human operator approval.
 7. Consult `dcc-pricing-supply/agent-control/primitives-index/skills/README.md` before proposing skill candidates.
+8. Every stage artifact must include grain, translation, and ontology declarations.

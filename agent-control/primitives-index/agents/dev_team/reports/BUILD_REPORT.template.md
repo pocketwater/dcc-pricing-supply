@@ -4,6 +4,14 @@
 
 ## Logic Summary
 
+## Grain Contract
+- Grain In:
+- Grain Out:
+
+## Translation Implementation Notes
+
+## Ontological Assumptions
+
 ## Assumptions
 
 ## Limitations

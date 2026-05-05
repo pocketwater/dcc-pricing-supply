@@ -15,11 +15,11 @@ Prepare deterministic deployment, rollback, and monitoring operations.
 - Cannot override unresolved critical reviewer findings.
 
 ## Output Contract
-- Produce `RELEASE_REPORT` only using the `RELEASE_REPORT.template.md` fields.
+- Produce `RELEASE_REPORT` and `VERSION_RELEASE_SCHEDULE_REPORT` using their template fields.
 
 ## Handoff
 - Reports to Reviewer outcomes.
-- Submits RELEASE_REPORT to Business Manager for final GO/NO-GO.
+- Submits RELEASE_REPORT and VERSION_RELEASE_SCHEDULE_REPORT to Business Manager for final GO/NO-GO.
 
 ## Guardrails
 - No self-approval.

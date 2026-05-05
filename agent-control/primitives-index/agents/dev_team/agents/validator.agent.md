@@ -16,6 +16,8 @@ Prove correctness of implementation using reproducible tests and query evidence.
 
 ## Output Contract
 - Produce `VALIDATION_REPORT` only using the `VALIDATION_REPORT.template.md` fields.
+- Include grain contract, translation validation, ontological assumptions check, and deontological failure check.
+- For PDI endpoint pipelines, include SQL-01 sandbox company validation evidence.
 
 ## Handoff
 - Reports to Builder.

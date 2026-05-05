@@ -19,6 +19,8 @@ Rules:
 9. Stop only on `BLOCKED_FOR_OWNER`, `HUMAN_APPROVAL_REQUIRED`, out-of-stage requests, or when the allowed routine is complete.
 10. For training/simulation runs, if `TRAINING_OUTPUT_ROOT` is missing, ask the operator for path once and proceed.
 11. Review `dcc-pricing-supply/agent-control/primitives-index/skills/README.md` for current skill-state guidance, then append `Skill Opportunity Review` with `NO_CANDIDATE` or `CANDIDATE_RECOMMENDED` to each stage outcome.
+12. Enforce stage artifact sections for grain, translation requirements, and ontological assumptions.
+13. For PDI endpoint pipelines, require SQL-01 sandbox company validation evidence before release GO/NO-GO.
 
 Planning-safe handling:
 1. Explicitly label the request `PLANNING_SAFE`.
@@ -38,7 +40,7 @@ Allowed stage artifacts:
 4. Validator -> `VALIDATION_REPORT`
 5. End User -> `UX_REPORT`
 6. Reviewer -> structured review summary
-7. Ops -> `RELEASE_REPORT`
+7. Ops -> `RELEASE_REPORT` + `VERSION_RELEASE_SCHEDULE_REPORT`
 
 If the request is out of stage, respond with:
 `BLOCKED: out-of-stage request.`

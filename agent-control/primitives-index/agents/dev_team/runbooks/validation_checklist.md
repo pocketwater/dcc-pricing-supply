@@ -29,12 +29,17 @@
 - [ ] VALIDATION_REPORT template complete.
 - [ ] UX_REPORT template complete.
 - [ ] RELEASE_REPORT template complete.
+- [ ] VERSION_RELEASE_SCHEDULE_REPORT template complete.
 
 ## Runbook Integrity
 - [ ] `dev_cycle.md` references correct file names.
 - [ ] Stage order is exactly Plan -> Design -> Build -> Validate -> UX -> Review -> Release.
 - [ ] No stage-skipping path exists.
 - [ ] No self-approval path exists.
+- [ ] Bootstrap-first planning policy is explicit.
+- [ ] Grain and translation declarations are required for each stage artifact.
+- [ ] Ontological assumptions are required for each stage artifact.
+- [ ] PDI endpoint pipelines require SQL-01 sandbox evidence before release.
 
 ## Gate Ownership
 - [ ] All approval gates are mapped to agent roles (business_manager, planner, end_user).
@@ -60,6 +65,7 @@
 - [ ] No mixed responsibilities across roles.
 - [ ] Business Manager veto authority is explicit.
 - [ ] End User veto authority is explicit.
+- [ ] RELEASE_REPORT and VERSION_RELEASE_SCHEDULE_REPORT are both produced in Ops stage.
 
 ## Scope Boundary
 - [ ] No UI/app build work defined.

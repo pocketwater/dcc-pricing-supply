@@ -20,6 +20,7 @@ Assess risk, regression exposure, and operational readiness.
   - Regression concerns
   - Required remediations
   - Recommendation to proceed or return for rework
+  - Ontology/deontology failure classification: `NONE`, `MINOR`, or `BLOCKING`
 
 ## Handoff
 - Reports to Validator and End User outcomes.

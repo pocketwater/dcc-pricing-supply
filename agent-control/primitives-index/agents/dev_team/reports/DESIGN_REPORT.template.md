@@ -6,6 +6,14 @@
 
 ## Interfaces (inputs/outputs)
 
+## Grain Contract
+- Grain In:
+- Grain Out:
+
+## Translation Requirements
+
+## Ontological Assumptions
+
 ## Failure Modes
 
 ## Validation Strategy

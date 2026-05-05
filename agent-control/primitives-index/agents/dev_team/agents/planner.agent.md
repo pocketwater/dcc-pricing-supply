@@ -18,6 +18,8 @@ Define objective, constraints, scope boundaries, success metrics, dependencies, 
 ## Output Contract
 - Produce `PLAN_REPORT` only using the `PLAN_REPORT.template.md` fields.
 - Do not emit any design, build, validation, UX, or release artifact.
+- Start every plan with a bootstrap approach targeting the lowest-cost valid output.
+- Include grain contract, translation requirements, and ontological assumptions.
 
 ## Gate Decision Rules
 - `planner` acts as an approving agent on `DESIGN_REPORT` (co-approver alongside business_manager).
