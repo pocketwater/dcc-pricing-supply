@@ -1012,8 +1012,11 @@ skills:
       Orchestrate the full end-to-end CitySV Gravitate order pipeline run for
       a specific gate day: export generation, operator handoff for file upload,
       and post-import pipeline execution. Each stage gate must pass before the
-      next stage is initiated. The skill owns sequencing and operator handoff
-      prompts; it does not own triage, blocker resolution, or audit.
+      next stage is initiated. Effective 2026-05-05, morning runs interpret
+      "run orders for {date}" as a dual-day window: process {date} plus current
+      day to capture deliveries arriving after the second SFTP pull. The skill
+      owns sequencing and operator handoff prompts; it does not own triage,
+      blocker resolution, or audit.
     inputs_required:
       - gate_day               # ISO date string e.g. 2026-05-03
       - optional_skip_flags    # e.g. -SkipCoverageSnap, -AllowPartialMatch
@@ -1053,11 +1056,13 @@ skills:
         - "Report archive filename explicitly so operator has the proof reference."
         - "All stage runtimes must be reported."
         - "Stage 1 must always execute the export script fresh. Never replay or report output from a prior run. The archive timestamp in the output is the proof of execution."
+        - "Effective 2026-05-05, morning phrase 'run orders for {date}' means process {date} and current day in sequence (prior day then current day)."
     proof_required:
       - "Export: ROWS, H, F, DISPATCHES counts + archive filename"
       - "Post-import: gate result + matched/unmatched counts + batch ID"
       - "Stage 7b result must be reported (OK, insufficient history, or error)"
       - "Stage 8 result must be reported (complete or non-fatal error)"
+      - "For morning dual-day runs, report both day scopes separately with separate archive names and batch IDs"
     overlaps_with:
       - skill: Orders.auditDay
         relationship: non_overlapping
@@ -1105,5 +1110,7 @@ skills:
       defect: skill initially replayed prior run output instead of executing
       fresh. Fixed by adding explicit no_cache deterministic rule — archive
       timestamp is the proof of execution. Pattern observed 3+ times across
-      5/1, 5/2, 5/3 runs. Three-stage sequence is proven and stable.
+      5/1, 5/2, 5/3 runs. Three-stage sequence is proven and stable. Updated
+      2026-05-04 for 2026-05-05 go-live: morning requests now run prior day
+      plus current day to close post-second-SFTP delivery lag.
     last_seen: 2026-05-04
