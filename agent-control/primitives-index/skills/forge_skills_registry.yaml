@@ -4,6 +4,9 @@ last_registry_update: 2026-05-05
 # Only skills with status: active are execution-permitted for operational use.
 # Candidate and deprecated skills are non-executable registry records.
 # Promotion from candidate -> active is Jason authority only.
+# Production orders pipeline execution must route through the active skill
+# Orders.runOrders; do not execute the pipeline from session memory, ad-hoc
+# context reconstruction, or stale documentation alone.
 # Sync requirement:
 # Any change to this YAML must be followed by syncing the projection file at
 # csl-pricing-supply/semantic-index/AI-primitives-registry/forge_skills_registry.md
@@ -1181,12 +1184,15 @@ skills:
         - "All stage runtimes must be reported."
         - "Stage 1 must always execute the export script fresh. Never replay or report output from a prior run. The archive timestamp in the output is the proof of execution."
         - "Effective 2026-05-05, morning phrase 'run orders for {date}' means process {date} and current day in sequence (prior day then current day)."
+        - "Production pipeline execution must route through Orders.runOrders, not ad-hoc memory or session-context reconstruction."
+        - "Before mutating production state, execution must be grounded in the current runOrders skill contract and current gravitate-orders runbook surfaces."
     proof_required:
       - "Export: ROWS, H, F, DISPATCHES counts + archive filename"
       - "Post-import: gate result + matched/unmatched counts + batch ID"
       - "Stage 7b result must be reported (OK, insufficient history, or error)"
       - "Stage 8 result must be reported (complete or non-fatal error)"
       - "For morning dual-day runs, report both day scopes separately with separate archive names and batch IDs"
+      - "Execution should state that Orders.runOrders was the governing active skill for the run."
     overlaps_with:
       - skill: Orders.auditDay
         relationship: non_overlapping
