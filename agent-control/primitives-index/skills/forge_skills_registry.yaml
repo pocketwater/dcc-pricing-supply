@@ -500,10 +500,14 @@ skills:
         - target_month_window
         - rows_written
         - post_refresh_status_breakdown
+        - dispatch_summary_by_exclusion_type
+        - confirmed_in_pdi_order_count
       deterministic_rules:
         - "Must run canonical refresher (sp_Gravitate_Coverage_SNAP), not ad-hoc row updates."
         - "Must return month window and row count after refresh."
         - "Must include blocker/status summary proof after refresh."
+        - "Must include grouped Dispatch_No summary by exclusion type for operator review."
+        - "Must include total order count that is already in PDI (human-facing confirmed-in-PDI count)."
     execution_surface:
       harness: citysv-gravitate-pdi-ode
       mode: execute_and_verify
