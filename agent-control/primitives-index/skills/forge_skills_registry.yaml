@@ -493,6 +493,13 @@ skills:
       Refresh the coverage surface by executing the canonical snapshot rebuild
       and then returning a concise post-refresh verification summary.
       The primitive owns refresh execution and health proof only.
+    documentation_references:
+      - file: gravitate-orders/runbook/GRAVITATE_ORDERS_RUNBOOK_ACTIVE.md
+        section: Operational Notes
+        reason: Coverage refresh follows post-import completion
+      - file: gravitate-orders/runbook/OPERATING_DECISIONS_2026-04-28.md
+        section: Decision 003
+        reason: Coverage snap rebuild cadence and optional skip behavior
     inputs_required:
       - optional_as_of_date
       - optional_debug_mode
@@ -529,7 +536,8 @@ skills:
     reuse_count: 0
     notes: >
       Candidate promoted from repeated operator intent: orders.refresh maps to
-      coverage refresh, not blocker triage or completeness interpretation.
+      coverage refresh, not blocker triage or completeness interpretation. Updated
+      2026-05-05: added documentation references to operating decisions and runbooks.
     last_seen: 2026-05-05
   - skill_id: Orders.xrefResolve
     domain: Orders
@@ -551,6 +559,13 @@ skills:
       for product, vendor/fuel contract, terminal, and destination semantics.
       Distinguish missing source values from missing xref rows and from inactive
       mapping rows.
+    documentation_references:
+      - file: gravitate-orders/runbook/OPERATING_DECISIONS_2026-04-28.md
+        section: Decision 004
+        reason: Destination semantics and xref routing rules
+      - file: gravitate-orders/runbook/KNOWN_ISSUES_2026-04-24.md
+        section: Session Mitigations Applied
+        reason: Xref completeness and freight-only mapping correction pattern
     inputs_required:
       - dispatch_or_arn
       - optional_mapping_domain
@@ -587,7 +602,8 @@ skills:
     notes: >
       Candidate derived from recurring translation-debug workflow; pairs with
       Orders.refresh but remains distinct from blocker triage and ARN
-      reconciliation primitives.
+      reconciliation primitives. Updated 2026-05-05: added documentation
+      references to operating decisions and known issues.
     last_seen: 2026-05-05
   - skill_id: Platform.citysvRawCloneBuilder
     domain: Platform
@@ -1141,6 +1157,13 @@ skills:
       day to capture deliveries arriving after the second SFTP pull. The skill
       owns sequencing and operator handoff prompts; it does not own triage,
       blocker resolution, or audit.
+    documentation_references:
+      - file: gravitate-orders/runbook/GRAVITATE_ORDERS_RUNBOOK_ACTIVE.md
+        section: Stage Contract
+        reason: Stage sequence and operator handoff requirements
+      - file: gravitate-orders/runbook/POST_IMPORT_RUNBOOK_ACTIVE.md
+        section: Purpose
+        reason: Stage 3 post-import execution and gate rules
     inputs_required:
       - gate_day               # ISO date string e.g. 2026-05-03
       - optional_skip_flags    # e.g. -SkipCoverageSnap, -AllowPartialMatch
@@ -1236,8 +1259,9 @@ skills:
       timestamp is the proof of execution. Pattern observed 3+ times across
       5/1, 5/2, 5/3 runs. Three-stage sequence is proven and stable. Updated
       2026-05-04 for 2026-05-05 go-live: morning requests now run prior day
-      plus current day to close post-second-SFTP delivery lag.
-    last_seen: 2026-05-04
+      plus current day to close post-second-SFTP delivery lag. Updated 2026-05-05:
+      added explicit documentation_references to active runbooks.
+    last_seen: 2026-05-05
   - skill_id: Ops.humanSpellCheck
     domain: Ops
     status: candidate
