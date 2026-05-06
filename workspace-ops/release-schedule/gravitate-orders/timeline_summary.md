@@ -1,8 +1,8 @@
 # Gravitate-Orders Release Timeline (Control Aggregate)
 Workspace: COIL Pricing Supply
 Project: CitySV Gravitate -> PDI ODE Hardening
-Status: Phase 3 (In Progress)
-Updated: 2026-05-04
+Status: Phase 4 (Scheduled)
+Updated: 2026-05-06
 Canonical Source: [gravitate-orders/release-schedule/PROJECT_PLANNING_MANIFEST.md](../../../gravitate-orders/release-schedule/PROJECT_PLANNING_MANIFEST.md)
 
 ---
@@ -11,7 +11,7 @@ Canonical Source: [gravitate-orders/release-schedule/PROJECT_PLANNING_MANIFEST.m
 
 | Phase | Window | Objective | Status |
 |-------|--------|-----------|--------|
-| **Phase 3** | May 4, 2026 | Release planning baseline and integration scope lock | 🔄 In Progress |
+| **Phase 3** | May 4–6, 2026 | Release planning baseline and integration scope lock | ✅ Complete — Approved 2026-05-06 |
 | **Phase 4** | May 11, 2026 | Gate and observability hardening | ⏳ Scheduled |
 | **Phase 5** | May 18, 2026 | Performance and integration reliability | ⏳ Scheduled |
 | **Phase 6** | May 25, 2026 | Release readiness and handoff | ⏳ Scheduled |
@@ -42,7 +42,7 @@ Canonical Source: [gravitate-orders/release-schedule/PROJECT_PLANNING_MANIFEST.m
 
 | Gate | Owner | Approval | Status |
 |------|-------|----------|--------|
-| Phase 3 Exit | Planner + Architecture | Business Manager | 🔄 In Progress |
+| Phase 3 Exit | Planner + Architecture | Business Manager | ✅ Approved 2026-05-06 |
 | Phase 4 Exit | Validator | Reviewer | ⏳ Pending |
 | Phase 5 Exit | Performance Lead | Ops | ⏳ Pending |
 | Phase 6 Exit | Release Manager | Business Manager | ⏳ Pending |
@@ -66,12 +66,19 @@ No stage skipping. No self-approval.
 ## Local Artifacts
 
 **Working documents** (in gravitate-orders/release-schedule/):
-- `PROJECT_PLANNING_MANIFEST.md` — Execution plan with deliverables and exit criteria
-- `Phase3_Session_20260504.ics` — Working session calendar (iCalendar format)
-- `Phase4_Session_20260511.ics` — Phase 4 session
-- `Phase5_Session_20260518.ics` — Phase 5 session
-- `Phase6_Session_20260525.ics` — Phase 6 session
-- `README.md` — Operational runbook (triage, rollback, monitoring setup)
+
+Root (collective status):
+- `PROJECT_PLANNING_MANIFEST.md` — Execution plan with deliverables and exit criteria for all phases
+
+Per-phase artifacts:
+- `phase2_2026-05-02_Complete/Phase2_Review_20260502.ics` — Phase 2 review calendar
+- `phase3_2026-05-04_Complete/Phase3_Session_20260504.ics` — Phase 3 working session calendar
+- `phase3_2026-05-04_Complete/PHASE3_RISK_REGISTER.md` — Risk register and dependency matrix
+- `phase3_2026-05-04_Complete/PHASE3_PERFORMANCE_BASELINE.md` — Baseline measurements and SLO thresholds
+- `phase3_2026-05-04_Complete/PHASE3_RELEASE_GATES.md` — Release gate acceptance criteria (approved 2026-05-06)
+- `phase4_2026-05-11_Pending/Phase4_Session_20260511.ics` — Phase 4 session calendar
+- `phase5_2026-05-18_Pending/Phase5_Session_20260518.ics` — Phase 5 session calendar
+- `phase6_2026-05-25_Pending/Phase6_Session_20260525.ics` — Phase 6 session calendar
 
 **Findings & Brief** (in gravitate-orders/../inbox/briefs/):
 - `PDI_SQL01_Post_Import_Integration_Findings_2026-05-04.md` — Read-only research findings on post-import integration feasibility
@@ -97,7 +104,8 @@ No stage skipping. No self-approval.
 | Date | Update | Phase |
 |------|--------|-------|
 | 2026-05-04 | Project launched; Phase 3 scope locked with post-import integration | Phase 3 |
-| (TBD) | Phase 3 exit review and approvals | Phase 3 |
+| 2026-05-06 | Phase 3 deliverables completed: risk register, dependency matrix, performance baseline, SLO thresholds, release gates, post-import integration contract, export + post-import jobs built | Phase 3 |
+| 2026-05-06 | Phase 3 Business Manager sign-off — approved by Jason Vassar | Phase 3 |
 | (TBD) | Phase 4 gate controls finalized | Phase 4 |
 | (TBD) | Phase 5 performance envelope approved | Phase 5 |
 | (TBD) | Phase 6 release package and handoff | Phase 6 |
