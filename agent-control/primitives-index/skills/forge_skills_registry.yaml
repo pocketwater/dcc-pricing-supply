@@ -1,5 +1,9 @@
 registry_version: 0.1
 last_registry_update: 2026-05-05
+# Governance rules:
+# Only skills with status: active are execution-permitted for operational use.
+# Candidate and deprecated skills are non-executable registry records.
+# Promotion from candidate -> active is Jason authority only.
 # Sync requirement:
 # Any change to this YAML must be followed by syncing the projection file at
 # csl-pricing-supply/semantic-index/AI-primitives-registry/forge_skills_registry.md
