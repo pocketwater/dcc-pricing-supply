@@ -158,11 +158,34 @@ Repo Link: [gravitate-orders](../../../gravitate-orders)
 
 ---
 
+## Domain Translation Artifact Versioning Procedure
+
+For `workspace-ops/domain-translations`, apply this split and versioning model:
+
+- Planning docs live in `Design Planning/<major>-planning/`.
+- Executable/live artifacts live in `operational-artifacts/<version>/`.
+
+Required steps per version release:
+
+1. Create version folder under `operational-artifacts` with `deployment`, `validation`, and `evidence` subfolders.
+2. Keep planning narrative updates in the active planning iteration folder.
+3. Update `DOMAIN_TRANSLATION_VERSIONING_SCHEDULE.md` with status and next target.
+4. Update `DEPENDENCY_MATRIX.md` if any consumer dependencies changed.
+5. Attach validation evidence location in the relevant timeline summary.
+
+Major planning iteration rule:
+
+- Start a new `vN-planning` folder when the contract model, lifecycle model, or governance model materially changes.
+- Do not mix executable packs into planning folders.
+
+---
+
 ## Links & References
 
 - **Operational Repo Template:** [gravitate-orders/release-schedule](../../../gravitate-orders/release-schedule)
 - **Workspace Repos Covered:** gravitate-orders, citysv-prices, citysv-costs, pdi-clone-core, csl-pricing-supply
 - **Stage-Gate Contract:** See [dcc-pricing-supply/.github/runbooks/dev_cycle.md](../../.github/runbooks/dev_cycle.md)
+- **Domain Translation Versioning:** [DOMAIN_TRANSLATION_VERSIONING_SCHEDULE.md](DOMAIN_TRANSLATION_VERSIONING_SCHEDULE.md)
 
 ---
 

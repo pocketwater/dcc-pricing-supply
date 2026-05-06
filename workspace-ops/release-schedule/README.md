@@ -45,6 +45,12 @@ Digest of current project:
 - Upstream/downstream dependencies
 - Links to canonical sources in operational repo
 
+### [DOMAIN_TRANSLATION_VERSIONING_SCHEDULE.md](DOMAIN_TRANSLATION_VERSIONING_SCHEDULE.md)
+Domain translation versioning and artifact placement policy:
+- Planning iterations in `workspace-ops/domain-translations/Design Planning/<major>-planning/`
+- Live executable artifacts in `workspace-ops/domain-translations/operational-artifacts/<version>/`
+- Version roadmap (`v0.1`, `v0.2`, `v1.0`) and gate criteria
+
 ### DEPENDENCY_MATRIX.md *(Coming)*
 Cross-repo sequencing logic:
 - Phase gates that block other repos
@@ -107,3 +113,4 @@ Consolidated iCalendar with all operational phase events:
 - [ ] Generate MASTER_RELEASE_CALENDAR.ics from all operational calendars
 - [ ] Register remaining operational repos (citysv-prices, citysv-costs, etc.)
 - [ ] Create timeline_summary.md for each repo as they define release schedules
+- [ ] Execute `DOMAIN_TRANSLATION_VERSIONING_SCHEDULE.md` milestone `v0.1` hardening pack
