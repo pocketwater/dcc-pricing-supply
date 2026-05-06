@@ -1,5 +1,5 @@
 registry_version: 0.1
-last_registry_update: 2026-05-04
+last_registry_update: 2026-05-05
 
 skills:
   - skill_id: Orders.auditDay
@@ -465,6 +465,118 @@ skills:
       reconciliation-only and must not drift into lineage forensics or blocker
       triage.
     last_seen: 2026-05-02
+  - skill_id: Orders.refresh
+    domain: Orders
+    status: candidate
+    trigger_phrases:
+      - "orders.refresh"
+      - "refresh coverage"
+      - "rebuild coverage"
+      - "refresh the coverage view"
+      - "recompute coverage for this month"
+      - "run coverage snap"
+    non_triggers:
+      - "show blockers"
+      - "resolve blockers"
+      - "audit day completeness"
+      - "find these ARNs in PDI"
+      - "trace this dispatch through ingest"
+    intent: >
+      Refresh the coverage surface by executing the canonical snapshot rebuild
+      and then returning a concise post-refresh verification summary.
+      The primitive owns refresh execution and health proof only.
+    inputs_required:
+      - optional_as_of_date
+      - optional_debug_mode
+    output_contract:
+      type: coverage_refresh_result
+      deterministic: true
+      artifacts:
+        - refresh_executed_proof
+        - target_month_window
+        - rows_written
+        - post_refresh_status_breakdown
+      deterministic_rules:
+        - "Must run canonical refresher (sp_Gravitate_Coverage_SNAP), not ad-hoc row updates."
+        - "Must return month window and row count after refresh."
+        - "Must include blocker/status summary proof after refresh."
+    execution_surface:
+      harness: citysv-gravitate-pdi-ode
+      mode: execute_and_verify
+      likely_objects:
+        - dbo.sp_Gravitate_Coverage_SNAP
+        - dbo.Gravitate_Coverage_Snap
+        - dbo.vw_Gravitate_Orders_Coverage
+    safety:
+      mutates_data: true
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "orders.refresh"
+      - "refresh the coverage view"
+    reuse_count: 0
+    notes: >
+      Candidate promoted from repeated operator intent: orders.refresh maps to
+      coverage refresh, not blocker triage or completeness interpretation.
+    last_seen: 2026-05-05
+  - skill_id: Orders.xrefResolve
+    domain: Orders
+    status: candidate
+    trigger_phrases:
+      - "resolve xref"
+      - "check xref mapping"
+      - "which translation is missing"
+      - "why is this unresolved"
+      - "inspect product/vendor/terminal/fuelcontract mapping"
+      - "use the xref system"
+    non_triggers:
+      - "run coverage refresh"
+      - "show blocker table"
+      - "reconcile ARNs to PDI"
+      - "deploy schema refactor"
+    intent: >
+      Diagnose and prove translation outcomes through canonical xref surfaces
+      for product, vendor/fuel contract, terminal, and destination semantics.
+      Distinguish missing source values from missing xref rows and from inactive
+      mapping rows.
+    inputs_required:
+      - dispatch_or_arn
+      - optional_mapping_domain
+    output_contract:
+      type: xref_resolution_diagnostic
+      deterministic: true
+      artifacts:
+        - source_tuple
+        - xref_lookup_result
+        - unresolved_dimension
+        - recommended_fix_surface
+      deterministic_rules:
+        - "Must name the exact unresolved dimension (product/vendor/fuelcontract/terminal/destination)."
+        - "Must show source tuple and matching xref tuple (or explicit no-match proof)."
+        - "Must separate data defects from mapping defects."
+    execution_surface:
+      harness: citysv-gravitate-pdi-ode
+      mode: read_mostly
+      likely_objects:
+        - dbo.vw_Gravitate_Orders_Stage
+        - dbo.vw_Gravitate_Orders_Validation
+        - dbo.CitySV_OrdersUpload_GravitateVendor_XREF_Stage
+        - dbo.vw_Xref_Product_Gravitate_To_PDI
+        - dbo.vw_Xref_Terminal_Gravitate_To_PDI
+        - dbo.Gravitate_Destination_Resolver
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "show me the translation thats missing on ARN {arn}"
+      - "these are freight only loads, vendor should be 888888 and fuel contract P66.FRT"
+    reuse_count: 0
+    notes: >
+      Candidate derived from recurring translation-debug workflow; pairs with
+      Orders.refresh but remains distinct from blocker triage and ARN
+      reconciliation primitives.
+    last_seen: 2026-05-05
   - skill_id: Platform.citysvRawCloneBuilder
     domain: Platform
     status: candidate
