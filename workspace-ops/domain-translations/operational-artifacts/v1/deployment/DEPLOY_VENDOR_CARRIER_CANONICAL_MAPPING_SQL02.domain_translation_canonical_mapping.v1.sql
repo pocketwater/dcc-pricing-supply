@@ -87,7 +87,6 @@ INSERT dbo.Xref_Registry
     , Source_Key_3
     , Source_Key_4
     , Source_Description
-    , Composite_Hash
     , Target_Key
     , Target_Code
     , Resolution_Status
@@ -111,7 +110,6 @@ SELECT
     , S.Source_Key_3
     , S.Source_Key_4
     , S.Source_Description
-    , S.Composite_Hash
     , S.Target_Key
     , S.Target_Code
     , S.Resolution_Status
@@ -147,9 +145,9 @@ SELECT
     , Gravitate_Carrier_SCAC = X.Source_Key_2
     , PDI_Vend_Key           = X.Target_Key
     , PDI_Vend_ID            = X.Target_Code
-    , V.Vend_Description     = V.Vend_Description
-    , V.Vend_Class_ID        = V.Vend_Class_ID
-    , V.Vend_Type_Description = V.Vend_Type_Description
+    , Vend_Description       = V.Vend_Description
+    , Vend_Class_ID          = V.Vend_Class_ID
+    , Vend_Type_Description  = V.Vend_Type_Description
     , X.Resolution_Status
     , X.Is_Active
 FROM dbo.Xref_Registry AS X

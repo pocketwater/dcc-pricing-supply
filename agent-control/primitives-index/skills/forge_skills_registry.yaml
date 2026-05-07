@@ -1323,3 +1323,65 @@ skills:
       are all out of scope. Trigger only on explicit spell-check requests --
       do not invoke speculatively on every human message.
     last_seen: 2026-05-04
+
+  - skill_id: Sql.addCloneTable
+    domain: Sql
+    status: candidate
+    trigger_phrases:
+      - "Add a new clone table from SQL-01"
+      - "Bring over {TableName} from PDI"
+      - "Script a clone for {TableName}"
+      - "Add {TableName} to pdi-clone-core"
+      - "Clone {TableName} from SQL-01 to SQL-02"
+      - "Create the DDL and SYNC proc for {TableName}"
+    non_triggers:
+      - "Sync all clones"
+      - "Run AllClones_SYNC"
+      - "Check clone health"
+      - "What tables are in the clone registry"
+    intent: >
+      Given a PDI source table name on SQL-01, scaffold the complete
+      pdi-clone-core artifacts needed to add it as a registered clone on
+      SQL-02/PDI_PricingLink: (1) extract the column schema from sys.columns,
+      (2) generate the CREATE TABLE DDL in sql/tables/, (3) generate a
+      CREATE OR ALTER SYNC proc in sql/procedures/ using the standard
+      truncate-and-reload pattern with Sync_Dtm or Clone_LoadDtmUtc,
+      (4) deploy both to SQL-02 via sqlcmd, (5) register via
+      sp_PDI_AllClones_Register, (6) verify via sp_PDI_AllClones_List.
+    inputs_required:
+      - source_table_name
+      - optional_filter_conditions
+      - optional_join_columns
+    output_contract:
+      type: clone_scaffold_result
+      deterministic: true
+      artifacts:
+        - tbl_<TableName>.sql in sql/tables/
+        - sp_PDI_<TableName>_SYNC.sql in sql/procedures/
+        - deploy_confirmation (row count from sp_PDI_AllClones_List)
+      deterministic_rules:
+        - "Always use CREATE OR ALTER for SYNC procs — never bare CREATE."
+        - "All SYNC procs must follow truncate-and-reload pattern."
+        - "DDL must use IF OBJECT_ID IS NULL guard — idempotent."
+        - "Sync timestamp column must be named Sync_Dtm (datetime2) or Clone_LoadDtmUtc (datetime2(3))."
+        - "Source SELECT must use four-part naming: [PDI-SQL-01].[PDICompany_2386_01].[dbo].[TableName]."
+        - "Verify row count > 0 after first sync before marking complete."
+        - "File naming: tbl_<TableName>.sql and sp_PDI_<ShortName>_Clone_SYNC.sql."
+    proof_required:
+      - "sp_PDI_AllClones_List returns the new table with Rows > 0 and a non-null Max_Sync_Dtm."
+    safety:
+      mutates_data: true
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Bring over the rest of the clone tables mentioned in AllClones_List"
+      - "Add PDI_Vendors_Clone to pdi-clone-core"
+    reuse_count: 1
+    notes: >
+      Candidate only. Validated once during the 2026-05-07 session that
+      generalized the Vendors clone pattern to all 15 registered clone tables.
+      The truncate-and-reload pattern is standard; exceptions (batch load via
+      Clone_Load_Dtm/Clone_LoadDtmUtc) exist for high-volume tables such as
+      Fuel_Costs, Orders, Sites, Drivers, Trucks, and SI_Users. Four-part
+      linked-server naming is always required for SQL-01 source tables.
+    last_seen: 2026-05-07
