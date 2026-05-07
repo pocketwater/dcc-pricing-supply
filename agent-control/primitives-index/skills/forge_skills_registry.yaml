@@ -475,13 +475,13 @@ skills:
     last_seen: 2026-05-02
   - skill_id: Orders.refresh
     domain: Orders
-    status: candidate
+    status: active
     trigger_phrases:
       - "orders.refresh"
-      - "refresh coverage"
-      - "rebuild coverage"
-      - "refresh the coverage view"
-      - "recompute coverage for this month"
+      - "refresh orders coverage"
+      - "rebuild orders coverage"
+      - "refresh the orders coverage view"
+      - "recompute orders coverage for this month"
       - "run coverage snap"
     non_triggers:
       - "show blockers"
