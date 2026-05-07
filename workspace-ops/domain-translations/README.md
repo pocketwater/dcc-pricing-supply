@@ -27,7 +27,7 @@ domain-translations/
 ## Current Iterations
 
 - Planning: `Design Planning/v0-planning`
-- Operational: `operational-artifacts/v0`
+- Operational: `operational-artifacts/v0`, `operational-artifacts/v1`
 
 ## Naming Standards
 
