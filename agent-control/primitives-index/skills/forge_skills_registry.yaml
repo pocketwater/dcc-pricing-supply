@@ -1385,3 +1385,57 @@ skills:
       Fuel_Costs, Orders, Sites, Drivers, Trucks, and SI_Users. Four-part
       linked-server naming is always required for SQL-01 source tables.
     last_seen: 2026-05-07
+  - skill_id: Governance.skillAuthContextResolver
+    domain: Governance
+    status: candidate
+    trigger_phrases:
+      - "What's the approval context for [skill]?"
+      - "Why is VS Code still asking me to approve [skill]?"
+      - "Wire [skill] auth to runtime"
+      - "Should [skill] require approval?"
+      - "Map registry approval posture to VS Code settings"
+    non_triggers:
+      - "Run [skill]"
+      - "What does [skill] do?"
+      - "VS Code is slow"
+      - "Troubleshoot [skill]"
+    intent: >
+      Given a named skill, surface its approval_required posture from the
+      Forge registry and produce a VS Code settings recommendation or
+      instruction block that aligns runtime behavior to the registry's
+      declared intent. Bridges the gap between governance metadata and
+      VS Code agent confirmation behavior.
+    inputs_required:
+      - skill_id
+    inputs_optional:
+      - current_vscode_settings_json
+    output_contract:
+      type: auth_context_report
+      deterministic: true
+      artifacts:
+        - approval_posture_summary
+        - vscode_settings_recommendation
+        - optional_instruction_block
+      deterministic_rules:
+        - "Only surface settings changes supported by the installed VS Code version."
+        - "Never recommend disabling confirmations for skills where approval_required is true."
+        - "Report skill status (active/candidate/deprecated) alongside the posture."
+    proof_required:
+      - "Named skill found in YAML registry."
+      - "approval_required value cited verbatim from registry."
+      - "Settings recommendation references a real VS Code setting key."
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Shouldn't active and approved skills operate under the needed auth context?"
+      - "I still need to approve agent actions even for active skills."
+    reuse_count: 0
+    notes: >
+      Candidate only. Addresses the structural gap where approval_required in
+      the YAML is governance metadata only -- VS Code does not read it. This
+      skill surfaces the posture and bridges to actionable VS Code settings.
+      Does not auto-configure VS Code; produces recommendations for operator
+      review.
+    last_seen: 2026-05-07
