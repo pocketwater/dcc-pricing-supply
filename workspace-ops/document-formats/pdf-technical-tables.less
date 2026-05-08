@@ -86,6 +86,8 @@ td {
   padding: 4px 7px;
   vertical-align: top;
   word-break: break-word;
+  overflow: hidden;        /* clip content to cell; prevents bleed past page edge */
+  max-width: 0;            /* forces fixed-layout to honour table width budget */
 }
 
 tr:nth-child(even) td {
@@ -94,6 +96,14 @@ tr:nth-child(even) td {
 
 tr:hover td {
   background-color: #eef3fb;
+}
+
+/* ── Code inside table cells — must wrap, not overflow ──────── */
+td code, th code {
+  white-space: normal;
+  word-break: break-all;
+  overflow-wrap: break-word;
+  font-size: 0.82em;
 }
 
 /* ── Strong / bold in tables ─────────────────────────────────── */
@@ -132,7 +142,7 @@ hr {
 @media print {
   @page {
     size: A4 landscape;
-    margin: 1.2cm 1.4cm;
+    margin: 0.8cm 1cm;
   }
 
   .markdown-preview.markdown-preview {
