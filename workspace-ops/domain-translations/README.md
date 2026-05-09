@@ -9,6 +9,13 @@ puppeteer:
     right: "1cm"
 ---
 
+<style>
+table { table-layout: fixed !important; width: 100% !important; max-width: 100% !important; border-collapse: collapse; font-size: 10px; }
+td, th { word-break: break-all !important; overflow-wrap: anywhere !important; white-space: normal !important; overflow: hidden !important; min-width: 0 !important; border: 1px solid #bbb; padding: 4px 7px; vertical-align: top; }
+td:first-child, th:first-child { width: 22% !important; }
+td:last-child, th:last-child { width: 44% !important; }
+</style>
+
 # Domain Translations
 
 This folder is the source-of-truth structure for translation governance artifacts in DCC.

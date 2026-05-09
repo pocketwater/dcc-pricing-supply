@@ -78,16 +78,23 @@ th {
   padding: 5px 7px;
   text-align: left;
   font-weight: 600;
-  word-break: break-word;
+  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 
 td {
   border: 1px solid #bbb;
   padding: 4px 7px;
   vertical-align: top;
-  word-break: break-word;
-  overflow: hidden;        /* clip content to cell; prevents bleed past page edge */
-  max-width: 0;            /* forces fixed-layout to honour table width budget */
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  overflow: hidden;
+}
+
+/* Give the last column (typically Notes) half the table width */
+th:last-child, td:last-child {
+  width: 50%;
 }
 
 tr:nth-child(even) td {

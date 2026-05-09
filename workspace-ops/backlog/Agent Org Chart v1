@@ -1,0 +1,246 @@
+# Agent System v1 (Contract-Driven Dev Pipeline)
+
+## Objective
+Stand up a contract-driven, multi-agent development system in-repo that:
+- Enforces stage-gated development (Plan → Design → Build → Validate → UX → Review → Release)
+- Uses structured report artifacts as handoff contracts
+- Includes Business Manager + End User agents with veto authority
+- Is executable by Pete with zero schema guessing and deterministic outputs
+
+---
+
+## Scope
+IN:
+- /agents role definitions (Planner, Architect, Builder, Validator, Reviewer, Ops, Business Manager, End User)
+- /reports templates (PLAN_REPORT, DESIGN_REPORT, etc.)
+- /prompts task playbooks for each stage
+- /runbooks execution protocol (how to run a cycle)
+- Sample end-to-end cycle doc
+
+OUT:
+- No UI/app build
+- No DB object changes (this is process layer only)
+
+---
+
+## Constraints
+- One logical artifact per file
+- Markdown only
+- No implicit contracts — everything explicit and named
+- All outputs must map to a report template
+- No agent can approve its own work
+
+---
+
+## Directory Structure (create exactly)
+
+/
+├─ agents/
+│  ├─ planner.agent.md
+│  ├─ architect.agent.md
+│  ├─ builder.agent.md
+│  ├─ validator.agent.md
+│  ├─ reviewer.agent.md
+│  ├─ ops.agent.md
+│  ├─ business_manager.agent.md
+│  └─ end_user.agent.md
+│
+├─ reports/
+│  ├─ PLAN_REPORT.template.md
+│  ├─ DESIGN_REPORT.template.md
+│  ├─ BUILD_REPORT.template.md
+│  ├─ VALIDATION_REPORT.template.md
+│  ├─ UX_REPORT.template.md
+│  └─ RELEASE_REPORT.template.md
+│
+├─ prompts/
+│  ├─ plan_work.prompt.md
+│  ├─ design_solution.prompt.md
+│  ├─ build_sql.prompt.md
+│  ├─ validate_solution.prompt.md
+│  ├─ ux_review.prompt.md
+│  ├─ review_change.prompt.md
+│  └─ release_plan.prompt.md
+│
+├─ runbooks/
+│  └─ dev_cycle.md
+│
+└─ examples/
+   └─ sample_cycle.md
+
+---
+
+## Step 1 — Create Agent Files
+
+### agents/planner.agent.md
+- Mission: define scope, constraints, success metrics
+- Output: PLAN_REPORT only
+- Cannot write code
+- Reports to: Business Manager
+
+### agents/architect.agent.md
+- Mission: define structure, data flow, failure modes
+- Output: DESIGN_REPORT only
+- Cannot change scope
+- Prefers elegance and brevity when coding.
+- Reports to: Planner
+
+### agents/builder.agent.md
+- Mission: implement approved design
+- Output: BUILD_REPORT + executable blocks
+- No schema guessing
+- Reports to: Architect
+
+### agents/validator.agent.md
+- Mission: prove correctness via tests/queries
+- Output: VALIDATION_REPORT
+- Reports to: Builder
+
+### agents/reviewer.agent.md
+- Mission: risk + regression analysis
+- Output: review summary (freeform but structured)
+- Cannot rewrite solution
+- Reports to: Validator + User
+
+### agents/ops.agent.md
+- Mission: deployment, rollback, monitoring
+- Output: RELEASE_REPORT
+- Reports to: Reviewer
+
+### agents/business_manager.agent.md
+- Mission: business value, adoption, compliance
+- Enforces metrics, monitoring, versioning
+- Output: GO / NO-GO with conditions
+- Reports to: none (top-level)
+
+### agents/end_user.agent.md
+- Mission: workflow fit, minimal friction
+- Output: UX_REPORT
+- Can reject based on usability
+- Reports to: Validator
+
+---
+
+## Step 2 — Create Report Templates (exact fields)
+
+### reports/PLAN_REPORT.template.md
+- Objective
+- Constraints
+- Scope (in/out)
+- Success Metrics
+- Dependencies
+- Risks
+- Approval: [Manager]
+
+### reports/DESIGN_REPORT.template.md
+- Data Model Impact
+- Objects Affected
+- Interfaces (inputs/outputs)
+- Failure Modes
+- Validation Strategy
+- Approval: [Planner + Manager]
+
+### reports/BUILD_REPORT.template.md
+- Objects Modified
+- Logic Summary
+- Assumptions
+- Limitations
+- Validation Queries Included: YES/NO
+
+### reports/VALIDATION_REPORT.template.md
+- Test Coverage
+- Edge Cases
+- Sample Outputs
+- Pass/Fail Summary
+- Blocking Issues
+
+### reports/UX_REPORT.template.md
+- Click Path
+- Friction Points
+- Failure Clarity
+- Training Required
+- Verdict: ACCEPT / REJECT / WARNING
+
+### reports/RELEASE_REPORT.template.md
+- Deployment Steps
+- Rollback Plan
+- Monitoring Plan
+- Ownership
+- Verdict: GO / NO-GO
+
+---
+
+## Step 3 — Create Prompt Files
+
+Each prompt must:
+- Reference its agent
+- Require output in its report template
+- Explicitly forbid out-of-scope actions
+
+Example pattern:
+
+### prompts/plan_work.prompt.md
+"Use Planner agent. Produce PLAN_REPORT only. No code. Require success metrics and risks."
+
+Repeat for each stage.
+
+---
+
+## Step 4 — Build Runbook (runbooks/dev_cycle.md)
+
+Define exact execution order:
+
+1. Planner → PLAN_REPORT → Manager approval
+2. Architect → DESIGN_REPORT → Planner + Manager approval
+3. Builder → BUILD_REPORT
+4. Validator → VALIDATION_REPORT
+5. End User → UX_REPORT
+6. Reviewer → risk assessment
+7. Ops → RELEASE_REPORT → Manager final GO
+
+Rules:
+- No stage skipped
+- No self-approval
+- Must attach prior report before proceeding
+
+---
+
+## Step 5 — Example Cycle (examples/sample_cycle.md)
+
+Create a small example:
+- “Add logging to pipeline ingest”
+- Walk through all reports (lightweight but complete)
+- Show approvals at each gate
+
+---
+
+## Step 6 — Validation Checklist (for Pete before commit)
+
+- All folders exist
+- All agents defined with:
+  - mission
+  - authority
+  - output contract
+- All report templates complete
+- Runbook references correct file names
+- No undefined artifacts
+- No mixed responsibilities
+
+---
+
+## Done Criteria
+- Repo structure exists and is navigable
+- Each stage produces a deterministic artifact
+- A full cycle can be executed without improvisation
+- Manager and User agents have enforceable veto points
+
+---
+
+## Execution Notes
+- Do not invent additional agents
+- Do not merge roles
+- Do not add narrative fluff
+- Keep files tight and operational
+- Comment sections clearly for copy/paste usability
+
+STOP after file scaffolding + content creation. Do not extend into tooling or automation
