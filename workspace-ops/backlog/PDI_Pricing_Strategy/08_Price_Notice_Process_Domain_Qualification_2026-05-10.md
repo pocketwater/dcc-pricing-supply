@@ -517,8 +517,8 @@ This **deprecates the CP → CPPN batch notice workflow** for internal ordering 
 - "Exporting Invoices, EFT Files, and Price Notices to DTN (ARC, AREFT, ODB, ODPN)" (PDI Help)
 
 ### Internal Documentation
-- CustFuelContract_Domain_Qualification_2026-04-15.md (earlier phase)
-- Wholesale_Fuel_Customer_Pricing_Contracts_Assessment_2026-04-11.md
+- 01_CustFuelContract_Domain_Qualification_2026-04-15.md (earlier phase)
+- 02_Wholesale_Fuel_Customer_Pricing_Contracts_Assessment_2026-04-11.md
 - CitySV Axxis Price Publish Domain Flow (citysv-prices/docs/reference)
 
 ### Related SOCKS

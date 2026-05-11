@@ -4,8 +4,6 @@
 **Phase:** 7 — Customer Fuel Contract Domain Qualification
 **Verdict:** **VIABLE** — Conditionally qualified as an integration surface
 
-> jason's thoughts. need to use a test account and follow this process through from price contruction to price notice and finally to an order. need a price notice qualification memo.
-
 ---
 
 ## Objective
