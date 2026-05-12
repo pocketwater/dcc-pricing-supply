@@ -44,6 +44,15 @@ Pete must read both ontology and deontology at the start of any domain-relevant 
 - No direct queries to `[PDI-SQL-01]` linked server. Use clones in `PDI_PricingLink`.
 - No schema guessing. If a required object is absent, halt and declare the gap.
 
+### Orchestration Strategy
+- **SQL-heavy pipelines**: Prefer SQL Server Agent Jobs as the primary orchestrator for ETL/batch operations. Agent Jobs provide:
+  - Native scheduling, retry logic, and failure handling without PS translation layers
+  - Cleaner error diagnostics (direct T-SQL errors, not wrapped in PS escaping)
+  - State management and job history in `msdb` for audit and troubleshooting
+  - Simpler remote execution via T-SQL steps
+- **PowerShell role**: Reserve for pre/post-pipeline file ops, delivery steps, and remote file management that SQL Agent cannot reach easily.
+- **Anti-pattern**: Orchestrating heavy SQL work via PS scripts with remote execution. This introduces parsing fragility and obscures SQL error diagnostics.
+
 ### Dev Cycle
 - Stage order is mandatory: **Plan → Design → Build → Validate → UX → Review → Release**.
 - No stage skipping. No self-approval. Every stage output maps to a named template contract.
