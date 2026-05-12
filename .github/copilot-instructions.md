@@ -32,7 +32,7 @@ Pete must read both ontology and deontology at the start of any domain-relevant 
 ### Freight Only (FO) Orders
 - FO rows: Coleman provides transport only. The fuel belongs to the supply owner (`Billing = 'FO'` in raw ingest).
 - `PDI_FuelCont_ID` must reflect the supply owner's contract — not the originating terminal's rack contract.
-- Known FO supply owner: Costco Wholesale Corporation (customer 909803) → contract `COSTCO_FRT`.
+- Known FO supply owner: Costco Wholesale Corporation (customer 909803) → contract `COSTCO.FRT`.
 - Multi-product FO loads to large accounts can legitimately exceed the volume guard; the guard is not an automatic blocker for FO orders.
 
 ### Carrier Loads (gravitate-orders)
