@@ -368,7 +368,19 @@
   <script>
     let currentTable = null;
     let currentData = null;
-    const API_BASE = 'http://localhost:3000/api';
+    const API_BASE = '/api';
+
+    async function fetchJson(url, options = undefined) {
+      const res = await fetch(url, options);
+      const payload = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const message = payload.error || payload.message || `Request failed with status ${res.status}`;
+        throw new Error(message);
+      }
+
+      return payload;
+    }
 
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
@@ -378,8 +390,7 @@
     // Load available tables
     async function loadTableOptions() {
       try {
-        const res = await fetch(`${API_BASE}/tables`);
-        const tables = await res.json();
+        const tables = await fetchJson(`${API_BASE}/tables`);
 
         const select = document.getElementById('tableSelect');
         select.innerHTML = '<option value="">-- Select a table --</option>';
@@ -412,8 +423,7 @@
         showMessage('', 'success'); // Clear messages
         document.getElementById('tableBody').innerHTML = '<tr><td colspan="100" class="loading">Loading...</td></tr>';
 
-        const res = await fetch(`${API_BASE}/table/${currentTable}`);
-        const data = await res.json();
+        const data = await fetchJson(`${API_BASE}/table/${currentTable}`);
 
         currentData = data;
 
@@ -467,8 +477,7 @@
 
       try {
         document.getElementById('tableBody').innerHTML = '<tr><td colspan="100" class="loading">Searching...</td></tr>';
-        const res = await fetch(`${API_BASE}/table/${currentTable}?search=${encodeURIComponent(search)}&column=${column}`);
-        const data = await res.json();
+        const data = await fetchJson(`${API_BASE}/table/${currentTable}?search=${encodeURIComponent(search)}&column=${encodeURIComponent(column)}`);
 
         currentData = data;
 
@@ -533,13 +542,11 @@
           formData[field.name] = field.value;
         });
 
-        const res = await fetch(`${API_BASE}/table/${currentTable}/append`, {
+        await fetchJson(`${API_BASE}/table/${currentTable}/append`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
         });
-
-        if (!res.ok) throw new Error(await res.text());
 
         showMessage('Row added successfully!', 'success');
         closeAddRowModal();

@@ -123,6 +123,23 @@ const TRANSLATION_TABLES = {
   }
 };
 
+function escapeSqlIdentifier(identifier) {
+  return `[${String(identifier).replace(/\]/g, ']]')}]`;
+}
+
+function buildSearchQuery(baseQuery, column, searchTerm) {
+  const orderByIndex = baseQuery.toUpperCase().lastIndexOf('ORDER BY');
+  if (orderByIndex < 0) {
+    throw new Error('Search is not supported for this query shape');
+  }
+
+  const selectClause = baseQuery.slice(0, orderByIndex).trim();
+  const orderByClause = baseQuery.slice(orderByIndex).trim();
+  const safeColumn = escapeSqlIdentifier(column);
+
+  return `${selectClause} WHERE ${safeColumn} LIKE @search ${orderByClause}`;
+}
+
 // ============================================================================
 // API ROUTES
 // ============================================================================
@@ -173,17 +190,26 @@ app.get('/api/table/:tableId', async (req, res) => {
       return res.status(404).json({ error: 'Table not found' });
     }
 
+    const request = new sql.Request(pool);
     let query = tableConfig.query;
 
-    // If search provided, add WHERE clause
-    if (search && column) {
-      query = query.replace(
-        'ORDER BY',
-        `WHERE ${column} LIKE '%${search.replace(/'/g, "''")}%' ORDER BY`
-      );
+    if ((search && !column) || (!search && column)) {
+      return res.status(400).json({ error: 'Both search and column are required together' });
     }
 
-    const request = new sql.Request(pool);
+    // Apply filtered query only when both search params are provided.
+    if (search && column) {
+      const previewResult = await request.query(`${tableConfig.query.replace(/;\s*$/, '')} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY`);
+      const availableColumns = previewResult.recordset.length > 0 ? Object.keys(previewResult.recordset[0]) : [];
+
+      if (!availableColumns.includes(column)) {
+        return res.status(400).json({ error: 'Invalid search column' });
+      }
+
+      query = buildSearchQuery(tableConfig.query, column, search);
+      request.input('search', sql.VarChar(sql.MAX), `%${search}%`);
+    }
+
     const result = await request.query(query);
 
     res.json({
@@ -302,8 +328,8 @@ app.get('/api/health', (req, res) => {
 // ============================================================================
 
 app.listen(PORT, async () => {
-  console.log(`Server running on http://localhost:${PORT}`);
   await initDb();
+  console.log(`Server running on http://localhost:${PORT}`);
 });
 
 // Graceful shutdown
