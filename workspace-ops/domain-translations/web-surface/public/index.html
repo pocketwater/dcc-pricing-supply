@@ -400,6 +400,8 @@
           option.value = table.id;
           option.textContent = table.name;
           option.dataset.editable = table.editable;
+          option.dataset.unavailable = table.unavailable ? 'true' : 'false';
+          option.disabled = table.unavailable === true;
           select.appendChild(option);
         });
 
@@ -407,6 +409,11 @@
         select.addEventListener('change', () => {
           currentTable = select.value;
           if (currentTable) {
+            const selected = select.options[select.selectedIndex];
+            if (selected.dataset.unavailable === 'true') {
+              showMessage('That table is not deployed in this environment yet.', 'error');
+              return;
+            }
             loadTable();
           }
         });
@@ -422,6 +429,14 @@
       try {
         showMessage('', 'success'); // Clear messages
         document.getElementById('tableBody').innerHTML = '<tr><td colspan="100" class="loading">Loading...</td></tr>';
+
+        const select = document.getElementById('tableSelect');
+        const selected = select.options[select.selectedIndex];
+        if (selected && selected.dataset.unavailable === 'true') {
+          showMessage('That table is not deployed in this environment yet.', 'error');
+          document.getElementById('tableBody').innerHTML = '<tr><td colspan="100" class="loading">Select a deployed table</td></tr>';
+          return;
+        }
 
         const data = await fetchJson(`${API_BASE}/table/${currentTable}`);
 

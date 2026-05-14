@@ -123,6 +123,15 @@ const TRANSLATION_TABLES = {
   }
 };
 
+async function isRegistryViewAvailable() {
+  const request = new sql.Request(pool);
+  const statusResult = await request.query(`
+    SELECT CASE WHEN OBJECT_ID('dbo.vw_Xref_Contract_Gravitate_To_PDI', 'V') IS NULL THEN 0 ELSE 1 END AS registry_view_exists
+  `);
+
+  return statusResult.recordset[0].registry_view_exists === 1;
+}
+
 function escapeSqlIdentifier(identifier) {
   return `[${String(identifier).replace(/\]/g, ']]')}]`;
 }
@@ -147,12 +156,7 @@ function buildSearchQuery(baseQuery, column, searchTerm) {
 // GET available tables
 app.get('/api/tables', async (req, res) => {
   try {
-    const request = new sql.Request(pool);
-    const statusResult = await request.query(`
-      SELECT CASE WHEN OBJECT_ID('dbo.vw_Xref_Contract_Gravitate_To_PDI', 'V') IS NULL THEN 0 ELSE 1 END AS registry_view_exists
-    `);
-
-    const registryViewExists = statusResult.recordset[0].registry_view_exists === 1;
+    const registryViewExists = await isRegistryViewAvailable();
 
     const tables = Object.entries(TRANSLATION_TABLES).map(([key, value]) => {
       if (key === 'registry_contract' && !registryViewExists) {
@@ -188,6 +192,12 @@ app.get('/api/table/:tableId', async (req, res) => {
     const tableConfig = TRANSLATION_TABLES[tableId];
     if (!tableConfig) {
       return res.status(404).json({ error: 'Table not found' });
+    }
+
+    if (tableId === 'registry_contract' && !(await isRegistryViewAvailable())) {
+      return res.status(503).json({
+        error: 'registry_contract is not available yet: dbo.vw_Xref_Contract_Gravitate_To_PDI is not deployed in this database'
+      });
     }
 
     const request = new sql.Request(pool);
@@ -228,6 +238,12 @@ app.get('/api/table/:tableId', async (req, res) => {
 // POST new row (append-only to registry)
 app.post('/api/table/registry_contract/append', async (req, res) => {
   try {
+    if (!(await isRegistryViewAvailable())) {
+      return res.status(503).json({
+        error: 'registry_contract write is unavailable: dbo.vw_Xref_Contract_Gravitate_To_PDI is not deployed in this database'
+      });
+    }
+
     const {
       Gravitate_Vendor,
       Gravitate_Price_Type,
