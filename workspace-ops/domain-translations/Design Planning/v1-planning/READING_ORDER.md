@@ -1,6 +1,6 @@
 # V1 Planning Reading Order
 
-**Iteration:** v1 (citysv-costs CITT canonicalization)  
+**Iteration:** v1 (citysv-costs CITT canonicalization)
 **Start Date:** 2026-05-13
 
 ## Recommended Reading Order

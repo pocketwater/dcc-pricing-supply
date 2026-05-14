@@ -1,10 +1,18 @@
 # V1 Scope: Gravitate Product/Terminal/Vendor Domain Migration
 
-**Iteration:** v1 (citysv-costs/citysv-prices CITT table canonicalization)  
-**Status:** Planning  
-**Date:** 2026-05-13  
-**Owner:** Jason Vassar  
+**Iteration:** v1 (citysv-costs/citysv-prices CITT table canonicalization)
+**Status:** Planning
+**Date:** 2026-05-13
+**Owner:** Jason Vassar
 **Sponsor:** COIL Pricing Supply Team
+
+## Scope Constraint (Critical)
+
+**Database/Pipeline Boundary:**
+- **IN SCOPE (v1):** PDI_PricingLink — Gravitate FTP pricing feed (`sp_Gravitate_FTP_UPLOAD_SELECT` and dependent procedures)
+- **OUT OF SCOPE (v1):** COL_WH — `sp_Gravitate_Price_Feed` remains independent; separate migration if/when needed
+
+This v1 iteration migrates only the Gravitate vendor/terminal/contract mappings used by the citysv-prices cost-push pipeline in PricingLink. COL_WH is explicitly excluded.
 
 ---
 

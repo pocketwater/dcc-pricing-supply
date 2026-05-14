@@ -1,0 +1,16 @@
+
+# SFTP Connection for Gravitate Dispatch software
+
+The same root can be used to receive delivered orders
+
+website: ftp.gravitate.energy
+port: 22
+username: coleman-oil
+password: HJhgq6qbYyLij$ni
+
+## Prices Path
+/Prices/inbox/archive
+
+## Orders
+/order/outbound
+

@@ -1,5 +1,5 @@
 registry_version: 0.1
-last_registry_update: 2026-05-05
+last_registry_update: 2026-05-13
 # Governance rules:
 # Only skills with status: active are execution-permitted for operational use.
 # Candidate and deprecated skills are non-executable registry records.
@@ -1323,6 +1323,61 @@ skills:
       are all out of scope. Trigger only on explicit spell-check requests --
       do not invoke speculatively on every human message.
     last_seen: 2026-05-04
+  - skill_id: Gravitate.priceArchiveLookup
+    domain: Gravitate
+    status: active
+    trigger_phrases:
+      - "when was the last Gravitate push"
+      - "tell me the newest gravitate price file"
+      - "what is the newest Gravitate price file"
+    non_triggers:
+      - "orders"
+      - "run orders for {date}"
+      - "show me the orders"
+      - "tell me the newest gravitate order file"
+    intent: >
+      Return the newest file in the Gravitate price archive and report the file
+      name plus created timestamp. This is a read-only lookup against the FTP
+      archive path used for price deliveries; it must not route to order upload
+      prompts or dispatch workflows.
+    documentation_references:
+      - file: dcc-pricing-supply/workspace-ops/external-connectors/gravitate-prices
+        section: Prices Path
+        reason: Canonical FTP archive location for price-file lookup
+    inputs_required:
+      - optional_lookup_phrase
+    output_contract:
+      type: gravitate_price_archive_lookup_result
+      deterministic: true
+      artifacts:
+        - latest_file_name
+        - date_created
+        - archive_path
+        - lookup_status
+      deterministic_rules:
+        - "Use the /Prices/inbox/archive path on ftp.gravitate.energy."
+        - "Return the newest file by archive listing timestamp or created timestamp if exposed."
+        - "Do not match prompts containing orders."
+        - "Do not redirect to order upload or order pipeline skills."
+    execution_surface:
+      harness: citysv-gravitate-pdi-ode
+      mode: read_only
+      intent_note: >
+        Read-only FTP archive inspection for price files.
+      likely_objects:
+        - ftp.gravitate.energy/Prices/inbox/archive
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "when was the last Gravitate push"
+      - "tell me the newest gravitate price file"
+    reuse_count: 0
+    notes: >
+      Promoted to active 2026-05-13 after successful SFTP archive lookup.
+      Prompt matching intentionally excludes order-related requests.
+    last_seen: 2026-05-13
 
   - skill_id: Sql.addCloneTable
     domain: Sql
@@ -1385,6 +1440,80 @@ skills:
       Fuel_Costs, Orders, Sites, Drivers, Trucks, and SI_Users. Four-part
       linked-server naming is always required for SQL-01 source tables.
     last_seen: 2026-05-07
+
+  - skill_id: Costs.currentStpCostsFifc
+    domain: Costs
+    status: candidate
+    trigger_phrases:
+      - "show current stp costs from fifc"
+      - "return the most current stp costs from -01 fifc"
+      - "get latest fifc stp costs"
+      - "lookup current fifc costs"
+      - "show fifc costs for stp"
+    non_triggers:
+      - "publish citysv prices"
+      - "run gravitate orders"
+      - "resolve order blockers"
+      - "sync all clones"
+      - "deploy sql changes"
+    intent: >
+      Return the most current STP costs for FIFC scope with optional filtering
+      by any combination of supplier, terminal, product, and fuel contract.
+      Read-only lookup only. Response must prioritize operator-usable business
+      IDs/descriptions and cost values, not surrogate key output.
+    inputs_required:
+      - optional_supplier_id
+      - optional_terminal_id
+      - optional_product_id
+      - optional_fuel_contract_id
+      - optional_as_of_datetime
+      - optional_row_limit
+    freshness_gate:
+      clone_freshness_threshold_minutes: 5
+      routing_rules:
+        - "If last Fuel_Cost clone sync is within threshold, query local clone surfaces first."
+        - "If clone freshness exceeds threshold, compare expected runtime for targeted clone refresh versus direct SQL-01 query (no linked server) and choose faster read path."
+        - "Never use SQL-02 linked-server joins to SQL-01 inside pipeline query paths."
+    output_contract:
+      type: current_stp_costs_result
+      deterministic: true
+      artifacts:
+        - source_path_used
+        - freshness_decision
+        - current_cost_table
+        - row_count
+      deterministic_rules:
+        - "Return most-current row per STP lane within requested scope."
+        - "Exclude surrogate _Key columns from default output."
+        - "Default output must include business _ID and/or _Description fields plus cost."
+        - "Declare whether source was local clone or direct SQL-01 query."
+    execution_surface:
+      harness: citysv-costs
+      mode: read_only
+      likely_objects:
+        - dbo.PDI_Fuel_Costs_Clone
+        - dbo.PDI_Fuel_Contracts_Clone
+        - dbo.PDI_Vendors_Clone
+        - dbo.PDI_Products_Clone
+        - dbo.PDI_Terminals_Clone
+        - [PDI-SQL-01].PDICompany_2386_01.dbo.Fuel_Costs
+        - [PDI-SQL-01].PDICompany_2386_01.dbo.Fuel_Contracts
+        - [PDI-SQL-01].PDICompany_2386_01.dbo.Vendors
+        - [PDI-SQL-01].PDICompany_2386_01.dbo.Products
+        - [PDI-SQL-01].PDICompany_2386_01.dbo.Terminals
+    safety:
+      mutates_data: false
+      prod_safe: true
+      approval_required: false
+    evidence_prompts:
+      - "Ok, lets work on a new skill... return the most current STP costs from -01 FIFC."
+    reuse_count: 0
+    notes: >
+      Candidate captured early from explicit Jason request. Pending hardening on
+      exact clone freshness probe query, runtime comparison method, and final
+      output column contract naming.
+    last_seen: 2026-05-13
+
   - skill_id: Governance.skillAuthContextResolver
     domain: Governance
     status: candidate
