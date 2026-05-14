@@ -5,7 +5,7 @@
 // ============================================================================
 
 const express = require('express');
-const sql = require('mssql');
+const sql = require('mssql/msnodesqlv8');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { stringify } = require('csv-stringify/sync');
@@ -23,38 +23,18 @@ app.use(express.static('public'));
 // DATABASE CONFIGURATION
 // ============================================================================
 
+const DB_SERVER = process.env.DB_SERVER || 'PDI-SQL-02';
+const DB_NAME = process.env.DB_NAME || 'PDI_PricingLink';
+const DB_DRIVER = process.env.DB_DRIVER || 'ODBC Driver 17 for SQL Server';
+
 const dbConfig = {
-  server: process.env.DB_SERVER || 'PDI-SQL-02',
-  database: process.env.DB_NAME || 'PDI_PricingLink',
-  authentication: {
-    type: 'default',
-    options: {
-      userName: process.env.DB_USER || '',
-      password: process.env.DB_PASSWORD || ''
-    }
-  },
+  connectionString: `Driver={${DB_DRIVER}};Server=${DB_SERVER};Database=${DB_NAME};Trusted_Connection=Yes;TrustServerCertificate=Yes;`,
   options: {
+    trustedConnection: true,
     trustServerCertificate: true,
-    trustedConnection: true, // Windows Auth
-    enableKeepAlive: true,
+    enableArithAbort: true,
     connectionTimeout: 15000,
     requestTimeout: 30000
-  }
-};
-
-// If running locally with Windows Auth, simplify config:
-const localDbConfig = {
-  server: 'PDI-SQL-02',
-  database: 'PDI_PricingLink',
-  authentication: {
-    type: 'default',
-    options: {
-      trustedConnection: true
-    }
-  },
-  options: {
-    trustServerCertificate: true,
-    enableKeepAlive: true
   }
 };
 
@@ -63,9 +43,9 @@ let pool;
 // Initialize connection pool
 async function initDb() {
   try {
-    pool = new sql.ConnectionPool(localDbConfig);
+    pool = new sql.ConnectionPool(dbConfig);
     await pool.connect();
-    console.log('Database connected: PDI-SQL-02 / PDI_PricingLink');
+    console.log(`Database connected: ${DB_SERVER} / ${DB_NAME} (Windows Auth)`);
   } catch (err) {
     console.error('Database connection error:', err);
     process.exit(1);
@@ -148,13 +128,38 @@ const TRANSLATION_TABLES = {
 // ============================================================================
 
 // GET available tables
-app.get('/api/tables', (req, res) => {
-  const tables = Object.entries(TRANSLATION_TABLES).map(([key, value]) => ({
-    id: key,
-    name: value.name,
-    editable: value.editable
-  }));
-  res.json(tables);
+app.get('/api/tables', async (req, res) => {
+  try {
+    const request = new sql.Request(pool);
+    const statusResult = await request.query(`
+      SELECT CASE WHEN OBJECT_ID('dbo.vw_Xref_Contract_Gravitate_To_PDI', 'V') IS NULL THEN 0 ELSE 1 END AS registry_view_exists
+    `);
+
+    const registryViewExists = statusResult.recordset[0].registry_view_exists === 1;
+
+    const tables = Object.entries(TRANSLATION_TABLES).map(([key, value]) => {
+      if (key === 'registry_contract' && !registryViewExists) {
+        return {
+          id: key,
+          name: `${value.name} (NOT DEPLOYED YET)`,
+          editable: false,
+          unavailable: true
+        };
+      }
+
+      return {
+        id: key,
+        name: value.name,
+        editable: value.editable,
+        unavailable: false
+      };
+    });
+
+    res.json(tables);
+  } catch (err) {
+    console.error('Tables metadata error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // GET table data with optional search/filter
@@ -289,7 +294,7 @@ app.get('/api/table/:tableId/stats', async (req, res) => {
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', database: 'PDI-SQL-02', instance: 'PDI_PricingLink' });
+  res.json({ status: 'ok', database: DB_SERVER, instance: DB_NAME, auth: 'windows' });
 });
 
 // ============================================================================
