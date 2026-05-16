@@ -46,43 +46,47 @@ INSERT INTO dbo.Xref_Registry
     Domain_Name,
     Source_System,
     Target_System,
+    Target_Channel,
     Workgroup,
     Owning_Pipeline,
     Source_Key_1,     -- Gravitate_Vendor (cleaned: TRIM/LOWER applied)
     Source_Key_2,     -- Gravitate_Price_Type (branded, contract, rack)
     Source_Key_3,     -- Gravitate_Trmnl_Name
     Source_Key_4,     -- Gravitate_Bucket
+    Source_Description,
     Target_Key,       -- PDI_FuelCont_Key
     Target_Code,      -- PDI_FuelCont_ID
-    Target_Secondary_1,  -- PDI_Trmnl_Key
-    Target_Secondary_2,  -- PDI_Vend_Key
+    Resolution_Status,
     Is_Active,
     Effective_From,
+    Effective_To,
     Consuming_Views,
-    Source_Description,
-    Created_By,
-    Created_Date
+    Notes,
+    Created_Dtm,
+    Created_By
 )
 SELECT
     Domain_Name = 'Contract',
     Source_System = 'Gravitate',
     Target_System = 'PDI',
+    Target_Channel = CAST(NULL AS varchar(30)),
     Workgroup = 'COIL-Pricing-Supply',
     Owning_Pipeline = 'CitySV_Costs / CitySV_Prices / Gravitate-Orders',
     Source_Key_1 = LTRIM(RTRIM(REPLACE([Gravitate_Vendor], CHAR(10), ''))),  -- Clean embedded newlines
     Source_Key_2 = [Gravitate_Price_Type],
     Source_Key_3 = [Gravitate_Trmnl_Name],
     Source_Key_4 = [Gravitate_Bucket],
+    Source_Description = 'Seeded from Gravitate_PDI-SQL-02_XREF_Prod production surface (v1, PricingLink only)',
     Target_Key = [PDI_FuelCont_Key],
     Target_Code = [PDI_FuelCont_ID],
-    Target_Secondary_1 = [PDI_Trmnl_Key],
-    Target_Secondary_2 = [PDI_Vend_Key],
+    Resolution_Status = 'ACTIVE',
     Is_Active = 1,
     Effective_From = CAST(GETDATE() AS DATE),
+    Effective_To = CAST(NULL AS date),
     Consuming_Views = 'vw_Xref_Contract_Gravitate_To_PDI',
-    Source_Description = 'Seeded from Gravitate_PDI-SQL-02_XREF_Prod production surface (v1, PricingLink only)',
-    Created_By = 'Copilot-SEED-v1-2026-05-13',
-    Created_Date = GETDATE()
+    Notes = 'Contract canonical seed v1 (terminal/vendor keys retained in source extract; canonical surface resolves contract IDs).',
+    Created_Dtm = SYSUTCDATETIME(),
+    Created_By = 'Copilot-SEED-v1-2026-05-13'
 FROM (
     SELECT
         [Gravitate_Vendor] = 'bpoil',

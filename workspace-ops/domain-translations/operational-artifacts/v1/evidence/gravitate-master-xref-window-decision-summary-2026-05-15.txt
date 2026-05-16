@@ -1,0 +1,20 @@
+Gravitate Master XREF v1 Window Decision Summary
+Date: 2026-05-15
+Database: PDI_PricingLink on PDI-SQL-02
+
+Status: COMPLETE
+Decision: Canonical contract cutover applied successfully.
+
+Key results
+- Pre-change capture hash: 954E954BD5B70E0FEC9EFB78FFD1882E4DC6F6DFC0947075D92845EA28A6107E
+- Seed rows inserted: 199
+- Contract view row count: 199
+- Repoint status: REPOINT_APPLIED
+- Post-change procedure hash: 78C53E0CF1C1ABD67368F92D9C8918523D61E2BD70F81E970BADD3F73458232A
+- Validation flags: uses_legacy_master_xref=0, uses_canonical_contract_view=1, canonical_view_row_count=199, canonical_null_contract_id_count=0
+- Smoke: canonical contract view returned a valid row; procedure smoke emitted header-only result set but validation confirms the repoint is in place
+
+Notes
+- Initial smoke target dbo.vw_Gravitate_Orders_Ready was not present in SQL-02; replaced with direct canonical view smoke.
+- Seed baseline on SQL-02 is 199 rows, not 200.
+- sp_Gravitate_FTP_UPLOAD_SELECT now references dbo.vw_Xref_Contract_Gravitate_To_PDI.
