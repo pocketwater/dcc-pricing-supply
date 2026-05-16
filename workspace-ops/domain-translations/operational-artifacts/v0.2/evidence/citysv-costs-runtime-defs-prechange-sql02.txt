@@ -1,0 +1,56 @@
+=== CAPTURE CITYSV-COSTS RUNTIME DEFINITIONS (SQL-02) ===
+UTC: 2026-05-16T23:12:20.470
+Server: PDI-SQL-02
+Database: PDI_PricingLink
+capture_utc                    object_name                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           object_type                                                  object_definition                                                                                                                                                                                                                                               
+------------------------------ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ------------------------------------------------------------ ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+2026-05-16T23:12:20.470        [dbo].[sp_CitySV_Axxis_Costs_INGEST]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  SQL_STORED_PROCEDURE                                         CREATE PROCEDURE [dbo].[sp_CitySV_Axxis_Costs_INGEST]
+(
+  @FilePath nvarchar(4000) = N'C:\ETL Copydown\Inbound\CitySV\CSV_Axxis_Costs_PRODUCTION.csv'
+, @Debug    bit = 0
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    DECLARE
+          @Batch_ID
+2026-05-16T23:12:20.470        [dbo].[sp_CitySV_Axxis_Costs_PDI_TARGETED_UPLOAD]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     SQL_STORED_PROCEDURE                                         CREATE PROCEDURE [dbo].[sp_CitySV_Axxis_Costs_PDI_TARGETED_UPLOAD]
+(
+      @PDI_Company             sysname       = N'PDICompany_2386_01'
+    , @DateStart_YYYY_MM_DD    date
+    , @DateEnd_YYYY_MM_DD      date
+    , @ReturnRejected          bit           =
+2026-05-16T23:12:20.470        [dbo].[sp_CitySV_Axxis_Costs_PDI_UPLOAD]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              SQL_STORED_PROCEDURE                                         CREATE PROCEDURE [dbo].[sp_CitySV_Axxis_Costs_PDI_UPLOAD]
+(
+      @DateGateDays   int           = 4
+    , @AsOfDatetime   datetime2(0)  = NULL
+    , @ReturnRejected bit           = 0
+    , @Debug          bit           = 0
+)
+AS
+BEGIN
+    SET NOCOU
+2026-05-16T23:12:20.470        [dbo].[sp_CitySV_Axxis_Costs_PDI_VALIDATE]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            SQL_STORED_PROCEDURE                                         
+CREATE PROCEDURE [dbo].[sp_CitySV_Axxis_Costs_PDI_VALIDATE]
+    @AsOfDatetime   datetime2(0) = NULL,
+    @GraceMinutes   int          = 10,
+    @DoUpdates      bit          = 1,
+    @ReturnResult   bit          = 1,
+    @Debug          bit          
+2026-05-16T23:12:20.470        [dbo].[vw_CitySV_Axxis_Cost_PDI_Gravitate_Lineage_Comp]                                                                                                                                                                                                                                                                                                                                                                                                                                                                               VIEW                                                         
+
+CREATE VIEW [dbo].[vw_CitySV_Axxis_Cost_PDI_Gravitate_Lineage_Comp]
+AS
+WITH AxxisLatest AS
+(
+    SELECT
+          h.STP_Key
+        , h.SrcSplrName
+        , h.SrcTermName
+        , h.SrcProdName
+        , h.SrcEffDt
+        , CAST(h.SrcPrice
+
+=== END CAPTURE CITYSV-COSTS RUNTIME DEFINITIONS (SQL-02) ===
