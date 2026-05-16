@@ -1,0 +1,7 @@
+=== APPLY CITYSV-COSTS RUNTIME RESOLVED-XREF MIGRATION (SQL-02) ===
+UTC: 2026-05-16T23:23:56.133
+No replacement performed for dbo.sp_CitySV_Axxis_Costs_PDI_TARGETED_UPLOAD (already migrated or token mismatch).
+No replacement performed for dbo.sp_CitySV_Axxis_Costs_PDI_UPLOAD (already migrated or token mismatch).
+Applied migration for dbo.sp_CitySV_Axxis_Costs_PDI_VALIDATE
+Applied migration for dbo.vw_CitySV_Axxis_Cost_PDI_Gravitate_Lineage_Comp
+=== APPLY COMPLETE ===
