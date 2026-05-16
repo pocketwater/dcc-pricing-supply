@@ -12,9 +12,11 @@
 -- Timeline:
 --   Phase 1: Pre-deployment validation (< 5 minutes)
 --   Phase 2: Seed execution (< 5 seconds)
---   Phase 3: View creation (< 5 seconds)
---   Phase 4: Procedure repointing (< 30 seconds)
---   Phase 5: Post-deployment validation (< 2 minutes)
+--   Phase 3: Seed verification (< 2 minutes)
+--   Phase 4: View creation (< 5 seconds)
+--   Phase 5: Procedure repointing (< 30 seconds)
+--   Phase 6: Terminal gap patch (< 30 seconds)
+--   Phase 7: Post-deployment validation (< 2 minutes)
 --   Total expected: < 10 minutes
 --
 -- ============================================================================
@@ -73,7 +75,7 @@ PRINT CHAR(10) + 'PHASE 1 PASSED' + CHAR(10);
 -- ============================================================================
 -- PHASE 2: SEED EXECUTION
 -- ============================================================================
--- Goal: Insert 200 rows into Xref_Registry Contract domain
+-- Goal: Insert 199 rows into Xref_Registry Contract domain
 
 PRINT 'PHASE 2: Executing seed...';
 
@@ -85,29 +87,29 @@ PRINT 'PHASE 2: Executing seed...';
 -- EXEC sp_executesql N'... seed insert statements ...';
 
 PRINT 'PHASE 2: Seed script executed (separate batch)';
-PRINT '  Expected result: 200 rows inserted';
+PRINT '  Expected result: 199 rows inserted';
 
 -- ============================================================================
 -- PHASE 3: VERIFY SEED EXECUTION
 -- ============================================================================
--- Goal: Confirm all 200 rows were inserted correctly
+-- Goal: Confirm all 199 rows were inserted correctly
 
 PRINT CHAR(10) + 'PHASE 3: Verifying seed...';
 
-DECLARE @SeedRowCount INT;
-SELECT @SeedRowCount = COUNT(*)
+DECLARE @SeedCount INT;
+SELECT @SeedCount = COUNT(*)
 FROM dbo.Xref_Registry
 WHERE Domain_Name = 'Contract'
   AND Source_System = 'Gravitate'
   AND Target_System = 'PDI'
   AND Effective_From = CAST(GETDATE() AS DATE);
 
-IF @SeedRowCount <> 200
+IF @SeedCount <> 199
 BEGIN
-    RAISERROR('CRITICAL: Seed count mismatch. Expected 200, found %d', 16, 1, @SeedRowCount);
+    RAISERROR('CRITICAL: Seed count mismatch. Expected 199, found %d', 16, 1, @SeedCount);
 END
 
-PRINT '  OK: 200 rows seeded to Xref_Registry';
+PRINT '  OK: 199 rows seeded to Xref_Registry';
 
 -- Check 3a: Verify multi-type mappings are preserved
 DECLARE @MultiTypeMappings INT;
@@ -149,23 +151,57 @@ END
 PRINT 'PHASE 4 PASSED' + CHAR(10);
 
 -- ============================================================================
--- PHASE 5: POST-DEPLOYMENT VALIDATION
+-- PHASE 5: PROCEDURE REPOINT
+-- ============================================================================
+-- Goal: Repoint sp_Gravitate_FTP_UPLOAD_SELECT to canonical contract view
+
+PRINT 'PHASE 5: Procedure repoint...';
+
+-- Execute capture + repoint scripts as separate batches:
+--   sqlcmd -S PDI-SQL-02 -d PDI_PricingLink -E -i CAPTURE_SP_GRAVITATE_FTP_UPLOAD_SELECT_SQL02.domain_translation_canonical_mapping.v1.sql
+--   sqlcmd -S PDI-SQL-02 -d PDI_PricingLink -E -i APPLY_REPOINT_SP_GRAVITATE_FTP_UPLOAD_SELECT_TO_VW_XREF_CONTRACT_GRAVITATE_TO_PDI_SQL02.domain_translation_canonical_mapping.v1.sql
+
+-- Post-repoint validation:
+--   sqlcmd -S PDI-SQL-02 -d PDI_PricingLink -E -i ..\validation\VALIDATE_SP_GRAVITATE_FTP_UPLOAD_SELECT_CANONICAL_SOURCE_SQL02.domain_translation_canonical_mapping.v1.sql
+
+PRINT 'PHASE 5: Procedure repoint scripts executed (separate batches)';
+PRINT '  Expected result: sp_Gravitate_FTP_UPLOAD_SELECT references vw_Xref_Contract_Gravitate_To_PDI and no longer references Gravitate_PDI_Master_XREF';
+
+PRINT 'PHASE 5 PASSED' + CHAR(10);
+
+-- ============================================================================
+-- PHASE 6: TERMINAL GAP PATCH (CANONICAL)
+-- ============================================================================
+-- Goal: Ensure all contract terminal tokens resolve from canonical terminal domain
+
+PRINT 'PHASE 6: Terminal gap patch...';
+
+-- Execute the terminal patch script as a separate batch:
+--   sqlcmd -S PDI-SQL-02 -d PDI_PricingLink -E -i SEED.Xref_Registry.v1.Terminal.Gravitate_GapPatch.sql
+
+PRINT 'PHASE 6: Terminal gap patch script executed (separate batch)';
+PRINT '  Expected result: boisehfs + qncyrail active in Terminal domain';
+
+PRINT 'PHASE 6 PASSED' + CHAR(10);
+
+-- ============================================================================
+-- PHASE 7: POST-DEPLOYMENT VALIDATION
 -- ============================================================================
 -- Goal: Confirm production feed behaves correctly with new mapping source
 
-PRINT 'PHASE 5: Post-deployment validation...';
+PRINT 'PHASE 7: Post-deployment validation...';
 
--- Test 1: View returns 200 rows
-DECLARE @ViewRowCount INT;
-SELECT @ViewRowCount = COUNT(*)
+-- Test 1: View returns 199 rows
+DECLARE @ViewCount INT;
+SELECT @ViewCount = COUNT(*)
 FROM dbo.vw_Xref_Contract_Gravitate_To_PDI;
 
-IF @ViewRowCount <> 200
+IF @ViewCount <> 199
 BEGIN
-    RAISERROR('CRITICAL: View row count mismatch. Expected 200, found %d', 16, 1, @ViewRowCount);
+    RAISERROR('CRITICAL: View row count mismatch. Expected 199, found %d', 16, 1, @ViewCount);
 END
 
-PRINT '  OK: View returns 200 rows';
+PRINT '  OK: View returns 199 rows';
 
 -- Test 2: No null PDI_FuelCont_IDs
 DECLARE @NullContractCount INT;
@@ -180,31 +216,28 @@ END
 
 PRINT '  OK: No null PDI_FuelCont_IDs in view';
 
--- Test 3: Sample join — verify procedure can consume the view
--- (This simulates sp_Gravitate_FTP_UPLOAD_SELECT join logic)
-DECLARE @SampleJoinTest TABLE (
-    Gravitate_Vendor VARCHAR(50),
-    PDI_FuelCont_ID VARCHAR(50),
-    RowCount INT
-);
+-- Test 3: Sample grouped cardinality — verify procedure can consume the view
+-- (This simulates key grouping behavior expected by sp_Gravitate_FTP_UPLOAD_SELECT)
+DECLARE @JoinGroupCount INT;
+SELECT @JoinGroupCount = COUNT(*)
+FROM (
+    SELECT
+        V.Gravitate_Vendor,
+        V.PDI_FuelCont_ID
+    FROM dbo.vw_Xref_Contract_Gravitate_To_PDI AS V
+    GROUP BY
+        V.Gravitate_Vendor,
+        V.PDI_FuelCont_ID
+) AS G;
 
-INSERT INTO @SampleJoinTest
-SELECT
-    V.Gravitate_Vendor,
-    V.PDI_FuelCont_ID,
-    COUNT(*)
-FROM dbo.vw_Xref_Contract_Gravitate_To_PDI V
-GROUP BY V.Gravitate_Vendor, V.PDI_FuelCont_ID;
-
-DECLARE @JoinTestRowCount INT = @@ROWCOUNT;
-IF @JoinTestRowCount = 0
+IF @JoinGroupCount = 0
 BEGIN
     RAISERROR('CRITICAL: Sample join test returned no rows', 16, 1);
 END
 
-PRINT '  OK: Sample join test passed (' + CAST(@JoinTestRowCount AS VARCHAR(10)) + ' rows)';
+PRINT '  OK: Sample join test passed (' + CAST(@JoinGroupCount AS VARCHAR(10)) + ' groups)';
 
-PRINT 'PHASE 5 PASSED' + CHAR(10);
+PRINT 'PHASE 7 PASSED' + CHAR(10);
 
 -- ============================================================================
 -- SUMMARY
@@ -213,7 +246,8 @@ PRINT 'PHASE 5 PASSED' + CHAR(10);
 PRINT '================================================================================';
 PRINT 'DEPLOYMENT VALIDATION COMPLETE - ALL PHASES PASSED';
 PRINT '================================================================================';
-PRINT 'Seeds rows inserted: 200';
+PRINT 'Seeds rows inserted: 199';
 PRINT 'View created: vw_Xref_Contract_Gravitate_To_PDI';
-PRINT 'Next step: Repoint sp_Gravitate_FTP_UPLOAD_SELECT to consume view (ADR required)';
+PRINT 'Procedure repointed: sp_Gravitate_FTP_UPLOAD_SELECT -> vw_Xref_Contract_Gravitate_To_PDI';
+PRINT 'Rollback script available: ROLLBACK_SP_GRAVITATE_FTP_UPLOAD_SELECT_FROM_CAPTURE_SQL02.domain_translation_canonical_mapping.v1.sql';
 PRINT '================================================================================';

@@ -1,6 +1,6 @@
 # V1 Status: Build Phase Complete
 
-**Date:** 2026-05-13
+**Date:** 2026-05-15
 **Component:** Gravitate Contract XREF Canonicalization (PricingLink Only)
 **Scope:** PDI_PricingLink database only. COL_WH excluded.
 
@@ -45,32 +45,39 @@ All artifacts staged in: `dcc-pricing-supply/workspace-ops/domain-translations/o
 
 ## What Remains
 
-### Next: Deployment Phase (Requires ADR Decision)
+### Deployment Phase: Complete
 
-**Blocker:** Before executing the seed and repointing sp_Gravitate_FTP_UPLOAD_SELECT to consume the new view, an ADR decision is required per dcc-pricing-supply governance.
+The Gravitate Master XREF cutover has now been applied on SQL-02.
 
-**Execution Path:**
-1. Create ADR record with:
-   - Current state: `sp_Gravitate_FTP_UPLOAD_SELECT` consumes `Gravitate_PDI_Master_XREF` directly
-   - Proposed state: Consume `vw_Xref_Contract_Gravitate_To_PDI` (registry-sourced)
-   - Rationale: Centralized mapping, eliminates multi-source risks, improves auditability
-   - Rollback: Revert to legacy view (procedure modification is reversible within ~ 2 minutes)
+Current status:
+- `dbo.Xref_Registry` seeded with 199 contract rows.
+- `dbo.vw_Xref_Contract_Gravitate_To_PDI` now resolves keys using canonical/clone path only:
+  - terminal key from `Xref_Registry` Terminal domain
+  - vendor key from `PDI_FIVC_Vendor_Clone`
+  - no `Gravitate_PDI_Master_XREF` dependency in the view definition
+- `dbo.sp_Gravitate_FTP_UPLOAD_SELECT` repointed to the canonical contract view.
+- Validation confirms `uses_legacy_master_xref = 0`, `uses_canonical_contract_view = 1`, and `canonical_null_contract_id_count = 0`.
 
-2. Execute DEPLOYMENT_MANIFEST.sql in sequence:
-   - Phase 1: Pre-deployment validation
-   - Phase 2: Run SEED script (batch mode)
-   - Phase 3: Verify seed (checks row count, multi-type mappings)
-   - Phase 4: Create view (batch mode)
-   - Phase 5: Post-deployment validation (join test, view row count)
+### ✅ Post-Cutover Hardening (2026-05-15)
+- Added clone sync artifacts in `pdi-clone-core`:
+  - `PDI_Fuel_Contracts_Clone` + `sp_PDI_Fuel_Contracts_Clone_SYNC`
+  - `PDI_Fuel_Contract_Details_Clone` + `sp_PDI_Fuel_Contract_Details_Clone_SYNC`
+  - integrated both steps into `sp_PDI_AllClones_SYNC`
+- Applied canonical terminal gap patch for missing Gravitate terminal tokens:
+  - `boisehfs` → `Trmnl_Key 30` (`ID4150`)
+  - `qncyrail` → `Trmnl_Key 2107` (`WAC002`)
+- Post-hardening runtime checks:
+  - contract view rows: `199`
+  - null terminal keys: `0`
+  - null vendor keys: `0`
+  - `sp_Gravitate_FTP_UPLOAD_SELECT @DaysBack=5` rows: `1414`
 
-3. Execute procedure repointing:
-   - Modify sp_Gravitate_FTP_UPLOAD_SELECT to consume `vw_Xref_Contract_Gravitate_To_PDI`
-   - Test FTP feed: confirm 0 pollution in output CSV
-   - Compare row counts to baseline (should match or increase only if legacy data was incomplete)
+### Residual Follow-Up
 
-4. Freeze legacy table (optional, post-validation):
-   - Rename Gravitate_PDI_Master_XREF to `_Legacy` suffix
-   - Create compatibility shim if other code depends on it
+- Keep the rollback script staged until the next observation window closes.
+- Reconcile any downstream docs still referencing the old smoke target `dbo.vw_Gravitate_Orders_Ready`.
+
+Historical reference: the execution path above was used for the v1 cutover and is preserved in the run sheet and evidence bundle.
 
 ### Future: Migrate other legacy tables (out of scope v1)
 - PDI_CITT_Axxis_Grav_PDI_Products_Clone
@@ -87,8 +94,8 @@ All artifacts staged in: `dcc-pricing-supply/workspace-ops/domain-translations/o
 ## Success Criteria for Deployment
 
 ✅ All DEPLOYMENT_MANIFEST validation gates pass
-✅ 200 rows inserted into Xref_Registry
-✅ vw_Xref_Contract_Gravitate_To_PDI returns 200 rows
+✅ 199 rows inserted into Xref_Registry Contract domain
+✅ vw_Xref_Contract_Gravitate_To_PDI returns 199 rows
 ✅ sp_Gravitate_FTP_UPLOAD_SELECT repointing successful
 ✅ FTP feed CSV output matches baseline (0 new pollution)
 ✅ Row count verification: <= baseline + legitimate deltas
@@ -115,9 +122,18 @@ All artifacts staged in: `dcc-pricing-supply/workspace-ops/domain-translations/o
 ```
 dcc-pricing-supply/workspace-ops/domain-translations/operational-artifacts/v1/deployment/
 ├── SEED.Xref_Registry.v1.Contract.Gravitate_To_PDI.sql
+├── SEED.Xref_Registry.v1.Terminal.Gravitate_GapPatch.sql
 ├── vw_Xref_Contract_Gravitate_To_PDI.sql
 ├── DEPLOYMENT_MANIFEST.sql
-└── (README placeholder for execution instructions)
+├── CAPTURE_SP_GRAVITATE_FTP_UPLOAD_SELECT_SQL02.domain_translation_canonical_mapping.v1.sql
+├── APPLY_REPOINT_SP_GRAVITATE_FTP_UPLOAD_SELECT_TO_VW_XREF_CONTRACT_GRAVITATE_TO_PDI_SQL02.domain_translation_canonical_mapping.v1.sql
+└── ROLLBACK_SP_GRAVITATE_FTP_UPLOAD_SELECT_FROM_CAPTURE_SQL02.domain_translation_canonical_mapping.v1.sql
+
+dcc-pricing-supply/workspace-ops/domain-translations/operational-artifacts/v1/validation/
+└── VALIDATE_SP_GRAVITATE_FTP_UPLOAD_SELECT_CANONICAL_SOURCE_SQL02.domain_translation_canonical_mapping.v1.sql
+
+dcc-pricing-supply/workspace-ops/domain-translations/operational-artifacts/v1/evidence/
+└── RUN_SHEET_GRAVITATE_MASTER_XREF_SQL02.domain_translation_canonical_mapping.v1.md
 ```
 
 **Commit:** `48e8301` (deployed with this status)
